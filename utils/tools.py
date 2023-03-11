@@ -33,7 +33,6 @@ def to_device(data, device):
 
         mels = mels.to(device)
         mel_lens = mel_lens.to(device)
-
         speakers = speakers.to(device)
         max_src_len = max_src_len.to(device)
         max_mel_len = max_mel_len.to(device)
@@ -58,7 +57,6 @@ def to_device(data, device):
 
         texts = texts.to(device)
         src_lens = src_lens.to(device)
-
         speakers = speakers.to(device)
         max_src_len = max_src_len.to(device)
 
@@ -198,7 +196,7 @@ def generate_path(duration, mask):
     path = torch.zeros(b, t_x, t_y, dtype=mask.dtype).to(device)
 
     cum_duration_flat = cum_duration.view(b * t_x)
-    path = sequence_mask(cum_duration_flat, t_y).to(device)
+    path = sequence_mask(cum_duration_flat, t_y).to(mask.dtype)
 
     # True的个数为累积和小于mel长度的个数
     path = path.view(b, t_x, t_y)
