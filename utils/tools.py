@@ -28,14 +28,14 @@ def to_device(data, device):
             mel_lens,
             max_mel_len,
         ) = data
-        texts = texts.to(device)
-        src_lens = src_lens.to(device)
+        texts = torch.from_numpy(texts).long().to(device)
+        src_lens = torch.from_numpy(src_lens).to(device)
 
-        mels = mels.to(device)
-        mel_lens = mel_lens.to(device)
-        speakers = speakers.to(device)
-        max_src_len = max_src_len.to(device)
-        max_mel_len = max_mel_len.to(device)
+        mels = torch.from_numpy(mels).float().to(device)
+        mel_lens = torch.from_numpy(mel_lens).to(device)
+        speakers = torch.from_numpy(speakers).long().to(device)
+        # max_src_len = max_src_len.to(device)
+        # max_mel_len = max_mel_len.to(device)
         # texts = torch.from_numpy(texts).long().to(device)
         # src_lens = torch.from_numpy(src_lens).to(device)
         # mels = torch.from_numpy(mels).float().to(device)
@@ -55,14 +55,14 @@ def to_device(data, device):
     if len(data) == 6:
         (ids, raw_texts, speakers, texts, src_lens, max_src_len) = data
 
-        texts = texts.to(device)
-        src_lens = src_lens.to(device)
-        speakers = speakers.to(device)
-        max_src_len = max_src_len.to(device)
+        # texts = texts.to(device)
+        # src_lens = src_lens.to(device)
+        # speakers = speakers.to(device)
+        # max_src_len = max_src_len.to(device)
 
-        # speakers = torch.from_numpy(speakers).long().to(device)
-        # texts = torch.from_numpy(texts).long().to(device)
-        # src_lens = torch.from_numpy(src_lens).to(device)
+        speakers = torch.from_numpy(speakers).long().to(device)
+        texts = torch.from_numpy(texts).long().to(device)
+        src_lens = torch.from_numpy(src_lens).to(device)
 
         return (
             ids,

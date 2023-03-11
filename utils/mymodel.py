@@ -26,7 +26,8 @@ def get_model(args, configs, device, train=False):
             params=model.parameters(),
             lr=learning_rate
         )
-        return model, scheduled_optim
+        return model
+        # , scheduled_optim
 
     model.eval()
     model.requires_grad_ = False

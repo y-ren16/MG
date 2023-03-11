@@ -139,8 +139,9 @@ class TextMelDataset(Dataset):
         raw_texts = [data[idx]["raw_text"] for idx in idxs]
         mels = [data[idx]["mel"] for idx in idxs]
 
-        text_lens = torch.LongTensor([text.shape[0] for text in texts])
-        mel_lens = torch.LongTensor([mel.shape[0] for mel in mels])
+        text_lens = np.array([text.shape[0] for text in texts])
+        mel_lens = np.array([mel.shape[0] for mel in mels])
+        speakers = np.array(speakers)
 
         def fix_len_compatibility(length, num_downsamplings_in_unet=2):
             while True:
@@ -150,18 +151,16 @@ class TextMelDataset(Dataset):
 
         max_mel_len = max(mel_lens)
         max_mel_len = fix_len_compatibility(max_mel_len)
-        max_mel_len = torch.LongTensor(max_mel_len)
 
         texts = pad_1D(texts)
         mels = pad_2D(mels, max_mel_len)
 
-        texts = torch.LongTensor(texts)
-        mels = torch.Tensor(mels)
-        speakers = torch.LongTensor(speakers)
-        mels = mels.transpose(1, 2)
+        # texts = torch.LongTensor(texts)
+        # mels = torch.Tensor(mels)
+        # speakers = torch.LongTensor(speakers)
+        mels1 = np.transpose(mels, axes=(0, 2, 1))
 
         max_text_lens = max(text_lens)
-        max_text_lens = torch.LongTensor(max_text_lens)
 
         return (
             ids,
@@ -170,7 +169,7 @@ class TextMelDataset(Dataset):
             texts,
             text_lens,
             max_text_lens,
-            mels,
+            mels1,
             mel_lens,
             max_mel_len,
         )

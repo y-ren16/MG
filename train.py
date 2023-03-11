@@ -5,7 +5,7 @@ import json
 import numpy as np
 
 import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "4,5,6,7"
+# os.environ["CUDA_VISIBLE_DEVICES"] = "4,5,6,7"
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
@@ -15,10 +15,15 @@ from utils.mymodel import get_model, get_param_num, get_vocoder
 from model.loss import GradLoss
 from utils.tools import to_device, log
 import time
-from evaluate import evaluate
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+import torch.distributed as dist
+from torch.nn.parallel import DistributedDataParallel as DDP
+from torch.utils.data.distributed import DistributedSampler
+# from evaluate import evaluate
 
+gpus = [0, 1, 2, 4, 5, 6, 7]
+torch.cuda.set_device('cuda:{}'.format(gpus[0]))
+device = torch.device("cuda:{}".format(gpus[0]) if torch.cuda.is_available() else "cpu")
 
 def main(args, configs):
     print("Prepare training ...")
@@ -42,9 +47,15 @@ def main(args, configs):
         shuffle=True,
         collate_fn=dataset.collate_fn,
     )
-    model, optimizer = get_model(args, configs, device, train=True)
+    model = get_model(args, configs, device, train=True)
 
     # model = nn.DataParallel(model)
+    model = nn.DataParallel(model.to(device), device_ids=gpus, output_device=gpus[0])
+    learning_rate = train_config["optimizer"]["learning_rate"]
+    optimizer = torch.optim.Adam(
+        params=model.parameters(),
+        lr=learning_rate
+    )
 
     num_param = get_param_num(model)
 
@@ -96,11 +107,10 @@ def main(args, configs):
         for batchs in loader:
             for batch in batchs:
                 batch = to_device(batch, device)
-
                 # Forward
                 # out_size = torch.LongTensor(out_size)
                 # output = model(*(batch[2:]), out_size=out_size)
-                output = model(*(batch[2:]), out_size=172)
+                output = model(*(batch[2:]))
 
                 losses = Loss(batch, output)
                 total_loss = losses[0]

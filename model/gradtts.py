@@ -19,6 +19,7 @@ class GradTTS(nn.Module):
         self.n_feats = preprocess_config["preprocessing"]["mel"]["n_mel_channels"]
         self.n_spks = preprocess_config["preprocessing"]["spk"]["n_spks"]
         self.spk_emb_dim = preprocess_config["preprocessing"]["spk"]["spk_emb_dim"]
+        self.out_size = model_config["out_size"]
 
         self.speaker_emb = None
         if model_config["multi_speaker"]:
@@ -45,12 +46,13 @@ class GradTTS(nn.Module):
             mels=None,
             mel_lens=None,
             max_mel_len=None,
-            out_size=None,
             n_timesteps=50,
             temperature=1.0,
             stoc=False,
             length_scale=1.0
         ):
+
+        out_size = None
 
         if self.n_spks > 1:
             speaker = self.speaker_emb(speaker)
@@ -96,6 +98,7 @@ class GradTTS(nn.Module):
             y_max_length = max_mel_len
             y_mask = sequence_mask(y_lengths, y_max_length).unsqueeze(1).to(x_mask)
             attn_mask = x_mask.unsqueeze(-1) * y_mask.unsqueeze(2)
+            out_size = self.out_size
 
             with torch.no_grad():
                 const = -0.5 * math.log(2 * math.pi) * self.n_feats
