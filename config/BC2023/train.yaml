@@ -1,0 +1,24 @@
+path:
+  ckpt_path: "../MG-Data/output/ckpt"
+  log_path: "../MG-Data/output/log"
+  result_path: "../MG-Data/output/result"
+random_seed: 37
+optimizer:
+  batch_size: 16
+  group_size: 4
+  learning_rate: 0.0001
+  grad_clip_thresh: 1.0
+step:
+  total_step: 100000
+  log_step: 100
+  save_step: 100
+  val_step: 1000
+  synth_step: 1000
+
+  total_epoch: 10000
+  log_epoch: 1
+  save_epoch: 1
+  val_epoch: 10
+  synth_epoch: 10
+test:
+  test_size: 4

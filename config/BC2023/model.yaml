@@ -1,0 +1,24 @@
+encoder:
+  n_enc_channels: 192
+  filter_channels: 768
+  filter_channels_dp: 256
+  n_enc_layers: 6
+  enc_kernel: 3
+  enc_dropout: 0.1
+  n_heads: 2
+  window_size: 4
+
+decoder:
+  dec_dim: 64
+  beta_min: 0.05
+  beta_max: 20.0
+  pe_scale: 1000
+
+vocoder:
+  model: "HiFi-GAN" # support 'HiFi-GAN', 'MelGAN'
+  speaker: "LJSpeech" # support  'LJSpeech', 'universal'
+
+multi_speaker: False
+
+out_size: 172
+
