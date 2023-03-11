@@ -18,6 +18,13 @@ from utils.tools import to_device
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+HIFIGAN_CONFIG = '../MG-Data/hifigan_ckpt/UNIVERSAL_V1/config.json'
+HIFIGAN_CHECKPT = '../MG-Data/hifigan_ckpt/UNIVERSAL_V1/g_02500000'
+# HIFIGAN_CONFIG = './hifigan/config.json'
+# HIFIGAN_CHECKPT = './hifigan/generator_universal.pth.tar.zip'
+# HIFIGAN_CONFIG = './LJ_FT_T2_V3/config.json'
+# HIFIGAN_CHECKPT = './LJ_FT_T2_V3/generator_v3'
+
 
 def intersperse(lst, item):
     # Adds blank symbol
@@ -60,7 +67,7 @@ def preprocess_mandarin(text):
     return phones
 
 
-def synthesize_one_sample(text, i=0):
+def synthesize_one_sample(args, result_path, text, spk, language, cleaners, i=0):
     if language == "ch":
         text = preprocess_mandarin(text)
         x = torch.LongTensor([
@@ -96,14 +103,15 @@ def synthesize_one_sample(text, i=0):
     sample_rate = 22050
     print(f'Grad-TTS RTF: {t * sample_rate / (decoder_outputs.shape[-1] * 256)}')
     audio = (vocoder.forward(decoder_outputs).cpu().squeeze().clamp(-1, 1).numpy() * 32768).astype(np.int16)
+
     if args.speaker_id:
         write(
-            f'../MG-Data/output/result/sample_pt{args.checkpoint}_sp{args.speaker_id}_t{args.timesteps}_line{i}.wav',
+            f'{result_path}/sample_pt{str(args.restore_epoch)}_sp{args.speaker_id}_t{args.timesteps}_line{i}.wav',
             sample_rate, audio
         )
     else:
         write(
-            f'../MG-Data/output/result/sample_pt{args.checkpoint}_t{args.timesteps}_line{i}.wav',
+            f'{result_path}/sample_pt{str(args.restore_epoch)}_t{args.timesteps}_line{i}.wav',
             sample_rate, audio
         )
 
@@ -111,20 +119,33 @@ def synthesize_one_sample(text, i=0):
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
-    # parser.add_argument("--restore_epoch", type=int,
-    #                     default=600000, ###############
-    #                     # required=True,
-    #                     help = "restore"
-    #                     )
-    parser.add_argument(
-        '--checkpoint',
-        type=str,
-        # required=True,
-        default=100,
-        help='path to a checkpoint of Grad-TTS'
-    )
 
     parser.add_argument(
+        '-r',
+        '--restore_epoch',
+        type=int,
+        # required=True,
+        default=100,
+        help='restore_epoch of Grad-TTS'
+    )
+    parser.add_argument(
+        '-c',
+        '--ckpt',
+        type=str,
+        # required=True,
+        default="2023-03-11-02_53",
+        help='path to a checkpoint of Grad-TTS'
+    )
+    parser.add_argument(
+        '-d',
+        "--dataset",
+        type=str,
+        # required=True,
+        default="LJSpeech",
+        help="dataset yaml",
+    )
+    parser.add_argument(
+        '-m',
         "--mode",
         type=str,
         choices=["batch", "single"],
@@ -133,58 +154,44 @@ if __name__ == "__main__":
         help="Synthesize a whole dataset or a single sentence",
     )
     parser.add_argument(
+        '-s',
         "--source",
         type=str,
-        default="resources/filelists/syn_en.txt",
+        default="syn_en.txt",
         help="path to a source file with format like train.txt and val.txt, for batch mode only",
     )
     parser.add_argument(
+        '-t',
         "--text",
         type=str,
         default=None,
         help="raw text to synthesize, for single-sentence mode only",
     )
     parser.add_argument(
+        '-id',
         "--speaker_id",
         type=int,
         default=None,
         help="speaker ID for multi-speaker synthesis, for single-sentence mode only",
     )
     parser.add_argument(
+        '-time',
         '--timesteps',
         type=int,
         required=False,
-        default=10,
+        default=50,
         help='number of timesteps of reverse diffusion'
-    )
-    parser.add_argument(
-        "-p",
-        "--preprocess_config",
-        type=str,
-        # required=True,
-        default="config/LJSpeech/preprocess.yaml",
-        help="path to preprocess.yaml",
-    )
-    parser.add_argument(
-        "-m", "--model_config", type=str,
-        # required=True,
-        default="config/LJSpeech/model.yaml",
-        help="path to model.yaml"
-    )
-    parser.add_argument(
-        "-t", "--train_config", type=str,
-        # required=True,
-        default="config/LJSpeech/train.yaml",
-        help="path to train.yaml"
     )
 
     args = parser.parse_args()
 
-    preprocess_config = yaml.load(
-        open(args.preprocess_config, "r"), Loader=yaml.FullLoader
-    )
-    model_config = yaml.load(open(args.model_config, "r"), Loader=yaml.FullLoader)
-    train_config = yaml.load(open(args.train_config, "r"), Loader=yaml.FullLoader)
+    preprocess_config_path = os.path.join("config", args.dataset, "preprocess.yaml")
+    model_config_path = os.path.join("config", args.dataset, "model.yaml")
+    train_config_path = os.path.join("config", args.dataset, "train.yaml")
+
+    preprocess_config = yaml.load(open(preprocess_config_path, "r"), Loader=yaml.FullLoader)
+    model_config = yaml.load(open(model_config_path, "r"), Loader=yaml.FullLoader)
+    train_config = yaml.load(open(train_config_path, "r"), Loader=yaml.FullLoader)
     configs = (preprocess_config, model_config, train_config)
 
     if not isinstance(args.speaker_id, type(None)):
@@ -206,20 +213,13 @@ if __name__ == "__main__":
     generator.load_state_dict(
         torch.load(
             os.path.join(
-                '../MG-Data/output/ckpt', preprocess_config["dataset"], "2023-03-11-02_53", f'{args.checkpoint}.pt'
+                train_config["path"]["ckpt_path"], preprocess_config["dataset"], args.ckpt, f'{args.restore_epoch}.pt'
             ), map_location=lambda loc, storage: loc
         )
     )
     _ = generator.eval()
 
     print('Initializing HiFi-GAN...')
-
-    HIFIGAN_CONFIG = '../MG-Data/hifigan_ckpt/UNIVERSAL_V1/config.json'
-    HIFIGAN_CHECKPT = '../MG-Data/hifigan_ckpt/UNIVERSAL_V1/g_02500000'
-    # HIFIGAN_CONFIG = './hifigan/config.json'
-    # HIFIGAN_CHECKPT = './hifigan/generator_universal.pth.tar.zip'
-    # HIFIGAN_CONFIG = './LJ_FT_T2_V3/config.json'
-    # HIFIGAN_CHECKPT = './LJ_FT_T2_V3/generator_v3'
 
     with open(HIFIGAN_CONFIG, "r") as f:
         h = hifigan.AttrDict(json.load(f))
@@ -231,6 +231,7 @@ if __name__ == "__main__":
     _ = vocoder.cuda().eval()
     vocoder.remove_weight_norm()
     vocoder.to(device)
+
     language = preprocess_config["preprocessing"]["text"]["language"]
     cleaners = preprocess_config["preprocessing"]["text"]["text_cleaners"]
 
@@ -241,14 +242,16 @@ if __name__ == "__main__":
     elif language == "ch":
         symbols = symbols_ch
 
+    result_path = os.path.join(train_config['path']['result_path'], args.dataset)
+    os.makedirs(result_path, exist_ok=True)
     # Preprocess texts
     if args.mode == "batch":
-        with open(args.source, 'r', encoding='utf-8') as f:
+        with open(os.path.join('resources/filelists', args.source), 'r', encoding='utf-8') as f:
             texts = [line.strip() for line in f.readlines()]
         with torch.no_grad():
             for i, text in enumerate(texts):
-                synthesize_one_sample(text, i)
+                synthesize_one_sample(args, result_path, text, spk, language, cleaners, i)
 
     if args.mode == "single":
         with torch.no_grad():
-            synthesize_one_sample(text)
+            synthesize_one_sample(args, result_path, text, spk, language, cleaners)
