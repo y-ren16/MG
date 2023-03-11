@@ -18,6 +18,7 @@ class GradTTS(nn.Module):
         self.preprocess_config = preprocess_config
         self.n_feats = preprocess_config["preprocessing"]["mel"]["n_mel_channels"]
         self.n_spks = preprocess_config["preprocessing"]["spk"]["n_spks"]
+        self.spk_emb_dim = preprocess_config["preprocessing"]["spk"]["spk_emb_dim"]
 
         self.speaker_emb = None
         if model_config["multi_speaker"]:

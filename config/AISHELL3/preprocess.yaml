@@ -1,0 +1,32 @@
+dataset: "AISHELL3"
+
+path:
+  corpus_path: "../All_Data/Data/AISHELL-3"
+  preprocessed_path: "../MG-Data/preprocessed_data/AISHELL3"
+
+preprocessing:
+  text:
+    text_cleaners: []
+    language: "ch"
+  g2p:
+    dict_path: 'resources/pinyin-lexicon-r.txt'
+    add_blank: True
+  audio:
+    sampling_rate: 44100
+    max_wav_value: 32768.0
+  stft:
+    filter_length: 1024
+    hop_length: 256
+    win_length: 1024
+  mel:
+    n_mel_channels: 80
+    mel_fmin: 0
+    mel_fmax: 8000
+  spk:
+    n_spks: 218
+    spk_emb_dim: 64
+  dataform:
+    name_col: 0
+    speaker_col: 1
+    phone_col: 2
+    raw_text_col: 3

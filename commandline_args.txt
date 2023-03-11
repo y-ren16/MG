@@ -1,7 +1,7 @@
 {
   "restore_step": 0,
   "restore_epoch": 0,
-  "preprocess_config": "config/LJSpeech/preprocess.yaml",
-  "model_config": "config/LJSpeech/model.yaml",
-  "train_config": "config/LJSpeech/train.yaml"
+  "preprocess_config": "config/AISHELL3/preprocess.yaml",
+  "model_config": "config/AISHELL3/model.yaml",
+  "train_config": "config/AISHELL3/train.yaml"
 }

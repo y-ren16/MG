@@ -13,11 +13,15 @@ _id_to_symbol_fr = {i: s for i, s in enumerate(symbols_fr)}
 _symbol_to_id_en = {s: i for i, s in enumerate(symbols_en)}
 _id_to_symbol_en = {i: s for i, s in enumerate(symbols_en)}
 
+_symbol_to_id_ch = {s: i for i, s in enumerate(symbols_ch)}
+_id_to_symbol_ch = {i: s for i, s in enumerate(symbols_ch)}
+
 _curly_re = re.compile(r'(.*?)\{(.+?)\}(.*)')
 
 
 def text_to_sequence(language, have_phone, text, cleaner_names, dictionary=None):
     sequence = []
+
     if (len(text) > 0) & (language == 'fr'):
         skip = False
         SAMPA_i = text
@@ -55,7 +59,15 @@ def text_to_sequence(language, have_phone, text, cleaner_names, dictionary=None)
             text = m.group(3)
         if dictionary is not None:
             sequence = sequence[:-1] if sequence[-1] == space[0] else sequence
-
+    if language == 'ch':
+        while len(text):
+            m = _curly_re.match(text)
+            if not m:
+                sequence += _symbols_to_sequence_ch(_clean_text(text, cleaner_names))
+                break
+            sequence += _symbols_to_sequence_ch(_clean_text(m.group(1), cleaner_names))
+            sequence += _arpabet_to_sequence_ch(m.group(2))
+            text = m.group(3)
     return sequence
 
 
@@ -86,3 +98,15 @@ def _arpabet_to_sequence_en(text):
 
 def _should_keep_symbol_en(s):
     return s in _symbol_to_id_en and s != '_' and s != '~'
+
+
+def _symbols_to_sequence_ch(symbols):
+    return [_symbol_to_id_ch[s] for s in symbols if _should_keep_symbol_ch(s)]
+
+
+def _arpabet_to_sequence_ch(text):
+    return _symbols_to_sequence_ch(['@' + s for s in text.split()])
+
+
+def _should_keep_symbol_ch(s):
+    return s in _symbol_to_id_ch and s != '_' and s != '~'

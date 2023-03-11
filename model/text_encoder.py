@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from text.symbols import symbols_fr, symbols_en
+from text.symbols import symbols_fr, symbols_en, symbols_ch
 import math
 
 
@@ -23,6 +23,8 @@ class TextEncoder(nn.Module):
             self.n_vocab = len(symbols_fr) + 1
         elif self.language == 'en':
             self.n_vocab = len(symbols_en) + 1
+        elif self.language == 'ch':
+            self.n_vocab = len(symbols_ch) + 1
 
         self.emb = torch.nn.Embedding(self.n_vocab, self.n_channels)
         torch.nn.init.normal_(self.emb.weight, 0.0, self.n_channels ** -0.5)

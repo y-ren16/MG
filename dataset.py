@@ -3,7 +3,7 @@ import numpy as np
 import torch
 from torch.utils.data import Dataset
 from text import text_to_sequence, cmudict
-from text.symbols import symbols_fr, symbols_en
+from text.symbols import symbols_fr, symbols_en, symbols_ch
 import torchaudio
 from hifigan import mel_spectrogram
 from utils.tools import pad_1D, pad_2D
@@ -82,6 +82,8 @@ class TextMelDataset(Dataset):
 
     def __getitem__(self, index):
         basename = self.basename[index]
+        if basename[-4:] != '.wav':
+            basename += '.wav'
 
         if self.n_spks > 1:
             speaker = self.speaker[index]
@@ -94,8 +96,11 @@ class TextMelDataset(Dataset):
 
         if self.language == 'en':
             symbols_length = len(symbols_en)
-        else:
+        elif self.language == 'en':
             symbols_length = len(symbols_fr)
+        elif self.language == 'ch':
+            symbols_length = len(symbols_ch)
+
 
         if self.phone_col < 100:
             phone = np.array(text_to_sequence(self.language, True, self.text[index], self.cleaners))
