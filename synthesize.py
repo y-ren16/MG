@@ -194,10 +194,11 @@ if __name__ == "__main__":
     train_config = yaml.load(open(train_config_path, "r"), Loader=yaml.FullLoader)
     configs = (preprocess_config, model_config, train_config)
 
-    if not isinstance(args.speaker_id, type(None)):
-        assert preprocess_config["spk"]["n_spks"] > 1, "Ensure you set right number of speakers in `params.py`."
+    if preprocess_config["preprocessing"]["spk"]["n_spks"] > 1:
+        assert args.speaker_id is not None
         spk = torch.LongTensor([args.speaker_id])
     else:
+        assert args.speaker_id is None
         spk = torch.LongTensor([0])
 
     # Check source texts

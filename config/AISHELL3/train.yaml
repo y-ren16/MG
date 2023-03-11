@@ -1,7 +1,7 @@
 path:
-  ckpt_path: "../MG-Data/output_tmp/ckpt"
+  ckpt_path: "../MG-Data/output/ckpt"
   log_path: "../MG-Data/output_tmp/log"
-  result_path: "../MG-Data/output_tmp/result"
+  result_path: "../MG-Data/output/result"
 random_seed: 37
 optimizer:
   batch_size: 16
