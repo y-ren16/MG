@@ -6,7 +6,7 @@ from model import monotonic_align
 import random
 
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+# device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 class GradLoss(nn.Module):

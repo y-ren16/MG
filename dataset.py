@@ -115,7 +115,7 @@ class TextMelDataset(Dataset):
 
         phone = torch.LongTensor(phone)
         audio, sr = torchaudio.load(
-            os.path.join(self.wav_path, basename)
+            os.path.join(self.wav_path, basename[:-8], basename)
         )
         assert sr == self.sample_rate
         mel = mel_spectrogram(audio, self.n_fft, self.n_mels, self.sample_rate, self.hop_length,

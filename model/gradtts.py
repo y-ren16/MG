@@ -9,7 +9,7 @@ from model import monotonic_align
 import math
 import random
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+# device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 class GradTTS(nn.Module):
     def __init__(self, preprocess_config, model_config):
@@ -123,7 +123,7 @@ class GradTTS(nn.Module):
                 ]).to(mel_lens)
 
                 attn_cut = torch.zeros(attn.shape[0], attn.shape[1], out_size, dtype=attn.dtype, device=attn.device)
-                y_cut = torch.zeros(mels.shape[0], self.n_feats, out_size, dtype=mels.dtype, device=device)
+                y_cut = torch.zeros(mels.shape[0], self.n_feats, out_size, dtype=mels.dtype, device=mels.device)
                 y_cut_lengths = []
                 for i, (y_, out_offset_) in enumerate(zip(mels, out_offset)):
                     y_cut_length = out_size + (mel_lens[i] - out_size).clamp(None, 0)

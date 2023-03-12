@@ -15,7 +15,7 @@ matplotlib.use("Agg")
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
-def to_device(data, device):
+def to_device(data, device, non_blocking=True):
     if len(data) == 9:
         (
             ids,
@@ -28,12 +28,12 @@ def to_device(data, device):
             mel_lens,
             max_mel_len,
         ) = data
-        texts = torch.from_numpy(texts).long().to(device)
-        src_lens = torch.from_numpy(src_lens).to(device)
+        texts = torch.from_numpy(texts).long().to(device, non_blocking=True)
+        src_lens = torch.from_numpy(src_lens).to(device, non_blocking=True)
 
-        mels = torch.from_numpy(mels).float().to(device)
-        mel_lens = torch.from_numpy(mel_lens).to(device)
-        speakers = torch.from_numpy(speakers).long().to(device)
+        mels = torch.from_numpy(mels).float().to(device, non_blocking=True)
+        mel_lens = torch.from_numpy(mel_lens).to(device, non_blocking=True)
+        speakers = torch.from_numpy(speakers).long().to(device, non_blocking=True)
         # max_src_len = max_src_len.to(device)
         # max_mel_len = max_mel_len.to(device)
         # texts = torch.from_numpy(texts).long().to(device)
@@ -60,9 +60,9 @@ def to_device(data, device):
         # speakers = speakers.to(device)
         # max_src_len = max_src_len.to(device)
 
-        speakers = torch.from_numpy(speakers).long().to(device)
-        texts = torch.from_numpy(texts).long().to(device)
-        src_lens = torch.from_numpy(src_lens).to(device)
+        speakers = torch.from_numpy(speakers).long().to(device, non_blocking=True)
+        texts = torch.from_numpy(texts).long().to(device, non_blocking=True)
+        src_lens = torch.from_numpy(src_lens).to(device, non_blocking=True)
 
         return (
             ids,
