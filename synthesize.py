@@ -3,7 +3,7 @@ import argparse
 # from utils.mymodel import get_model
 from text import symbols_fr, symbols_en, symbols_ch
 import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+os.environ["CUDA_VISIBLE_DEVICES"] = "7"
 import torch
 import hifigan
 import json
@@ -98,7 +98,7 @@ def synthesize_one_sample(args, result_path, text, spk, language, cleaners, i=0)
         mels,
         encoder_outputs,
         decoder_outputs
-    ) = generator(*(batch[2:]), n_timesteps=args.timesteps, temperature=1.5, stoc=False, length_scale=0.91)
+    ) = generator(*(batch[2:]), n_timesteps=args.timesteps, temperature=1, stoc=False, length_scale=1)
     t = (dt.datetime.now() - t).total_seconds()
     sample_rate = 22050
     print(f'Grad-TTS RTF: {t * sample_rate / (decoder_outputs.shape[-1] * 256)}')
@@ -211,7 +211,7 @@ if __name__ == "__main__":
 
     generator = GradTTS(preprocess_config, model_config).to(device)
     # generator = get_model(args, configs, device, train=False).to(device)
-    generator = torch.nn.DataParallel(generator)
+    # generator = torch.nn.DataParallel(generator)
     checkpoint = torch.load(
             os.path.join(
                 train_config["path"]["ckpt_path"], preprocess_config["dataset"], args.ckpt, f'{args.restore_epoch}.pt'
