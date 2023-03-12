@@ -70,23 +70,23 @@ def preprocess_mandarin(text):
 def synthesize_one_sample(args, result_path, text, spk, language, cleaners, i=0):
     if language == "ch":
         text = preprocess_mandarin(text)
-        x = torch.LongTensor([
+        x = np.array([
             intersperse(text_to_sequence(language, True, text, cleaners), len(symbols_ch))])
     elif language == "en":
-        x = torch.LongTensor([
+        x = np.array([
             intersperse(text_to_sequence(language, False, text, cleaners), len(symbols_en))])
     else:
         # if language == "fr":
-        x = torch.LongTensor([
+        x = np.array([
             intersperse(text_to_sequence(language, True, text, cleaners), len(symbols_fr))])
 
     ids = raw_texts = [text[:100]]
-    text_lens = torch.LongTensor([x.shape[-1]])
+    text_lens = np.array([x.shape[-1]])
     speakers = spk
     phones = x
 
     t = dt.datetime.now()
-    batchs = [(ids, raw_texts, speakers, phones, text_lens, text_lens)]
+    batchs = [(ids, raw_texts, speakers, phones, text_lens, max(text_lens))]
     batch = to_device(batchs[0], device)
     (
         mu_x,
@@ -196,10 +196,10 @@ if __name__ == "__main__":
 
     if preprocess_config["preprocessing"]["spk"]["n_spks"] > 1:
         assert args.speaker_id is not None
-        spk = torch.LongTensor([args.speaker_id])
+        spk = np.array([args.speaker_id])
     else:
         assert args.speaker_id is None
-        spk = torch.LongTensor([0])
+        spk = np.array([0])
 
     # Check source texts
     if args.mode == "batch":
@@ -211,13 +211,13 @@ if __name__ == "__main__":
 
     generator = GradTTS(preprocess_config, model_config).to(device)
     # generator = get_model(args, configs, device, train=False).to(device)
-    generator.load_state_dict(
-        torch.load(
+    generator = torch.nn.DataParallel(generator)
+    checkpoint = torch.load(
             os.path.join(
                 train_config["path"]["ckpt_path"], preprocess_config["dataset"], args.ckpt, f'{args.restore_epoch}.pt'
-            ), map_location=lambda loc, storage: loc
+            )# , map_location=lambda loc, storage: loc
         )
-    )
+    generator.load_state_dict(checkpoint)
     _ = generator.eval()
 
     print('Initializing HiFi-GAN...')

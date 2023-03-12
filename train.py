@@ -147,6 +147,7 @@ def main(args, configs):
 
         if step % save_epoch == 0:
             ckpt = model.state_dict()
+            # ckpt = model.module.state_dict()
             torch.save(ckpt, os.path.join(ckpt_path, "{}.pt".format(epoch)))
             # torch.save(
             #     {
