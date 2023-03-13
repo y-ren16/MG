@@ -3,7 +3,7 @@ import argparse
 # from utils.mymodel import get_model
 from text import symbols_fr, symbols_en, symbols_ch
 import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "7"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 import torch
 import hifigan
 import json
@@ -184,6 +184,8 @@ if __name__ == "__main__":
     )
 
     args = parser.parse_args()
+    # with open('./syn_args.txt', 'r') as f:
+    #     args.__dict__ = json.load(f)
 
     preprocess_config_path = os.path.join("config", args.dataset, "preprocess.yaml")
     model_config_path = os.path.join("config", args.dataset, "model.yaml")
@@ -202,10 +204,10 @@ if __name__ == "__main__":
         spk = np.array([0])
 
     # Check source texts
-    if args.mode == "batch":
-        assert args.source is not None and args.text is None
-    elif args.mode == "single":
-        assert args.source is None and args.text is not None
+    # if args.mode == "batch":
+    #     assert args.source is not None and args.text is None
+    # elif args.mode == "single":
+    #     assert args.source is None and args.text is not None
 
     print('Initializing Grad-TTS...')
 
@@ -215,7 +217,7 @@ if __name__ == "__main__":
     checkpoint = torch.load(
             os.path.join(
                 train_config["path"]["ckpt_path"], preprocess_config["dataset"], args.ckpt, f'{args.restore_epoch}.pt'
-            )# , map_location=lambda loc, storage: loc
+            ) , map_location=lambda loc, storage: loc
         )
     generator.load_state_dict(checkpoint)
     _ = generator.eval()

@@ -1,0 +1,6 @@
+{
+  "restore_epoch": 115,
+  "preprocess_config": "config/AISHELL3/preprocess.yaml",
+  "model_config": "config/AISHELL3/model.yaml",
+  "train_config": "config/AISHELL3/train.yaml"
+}

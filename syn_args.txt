@@ -1,0 +1,9 @@
+{
+  "restore_epoch": 116,
+  "ckpt":"2023-03-13-03_54",
+  "dataset":"AISHELL3",
+  "mode":"batch",
+  "source":"syn_ch.txt",
+  "speaker_id":150,
+  "timesteps":50
+}

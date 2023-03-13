@@ -12,12 +12,13 @@ def get_model(args, configs, device, train=False):
     model = GradTTS(preprocess_config, model_config).to(device)
 
     if args.restore_epoch:
+        # model = torch.nn.DataParallel(model)
         ckpt_path = os.path.join(
-            train_config["path"]["ckpt_path"],
+            train_config["path"]["ckpt_path"], preprocess_config["dataset"], train_config["path"]["time"], 
             "{}.pt".format(args.restore_epoch),
         )
-        ckpt = torch.load(ckpt_path)
-        model.load_state_dict(ckpt["model"])
+        ckpt = torch.load(ckpt_path, map_location=lambda loc, storage: loc)
+        model.load_state_dict(ckpt)
 
     if train:
         model.train()
@@ -44,6 +45,8 @@ def get_vocoder(config, device):
     speaker = config["vocoder"]["speaker"]
 
     if name == "HiFi-GAN":
+        # HIFIGAN_CONFIG = '../MG-Data/hifigan_ckpt/config.json'
+        # HIFIGAN_CHECKPT = '../MG-Data/hifigan_ckpt/generator_universal.pth.tar'
         HIFIGAN_CONFIG = '../MG-Data/hifigan_ckpt/UNIVERSAL_V1/config.json'
         HIFIGAN_CHECKPT = '../MG-Data/hifigan_ckpt/UNIVERSAL_V1/g_02500000'
         with open(HIFIGAN_CONFIG, "r") as f:
@@ -55,7 +58,7 @@ def get_vocoder(config, device):
         elif speaker == "universal":
             ckpt = torch.load(HIFIGAN_CHECKPT)
         vocoder.load_state_dict(ckpt["generator"])
-        vocoder.eval()
+        _ = vocoder.cuda().eval()
         vocoder.remove_weight_norm()
         vocoder.to(device)
 
@@ -65,19 +68,10 @@ def get_vocoder(config, device):
 def vocoder_infer(mels, vocoder, model_config, preprocess_config, lengths=None):
     name = model_config["vocoder"]["model"]
     with torch.no_grad():
-        if name == "MelGAN":
-            wavs = vocoder.inverse(mels / np.log(10))
-        elif name == "HiFi-GAN":
-            wavs = vocoder(mels).squeeze(1)
+        if name == "HiFi-GAN":
+            wavs = vocoder.forward(mels)
 
-    wavs = (
-        wavs.cpu().numpy()
-        * preprocess_config["preprocessing"]["audio"]["max_wav_value"]
-    ).astype("int16")
-    wavs = [wav for wav in wavs]
-
-    for i in range(len(mels)):
-        if lengths is not None:
-            wavs[i] = wavs[i][: lengths[i]]
+        wavs = ( wavs.cpu().clamp(-1, 1).numpy() * preprocess_config["preprocessing"]["audio"]["max_wav_value"] ).astype(np.int16)
+        # wavs = [wav for wav in wavs]
 
     return wavs
