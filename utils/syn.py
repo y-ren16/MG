@@ -16,9 +16,10 @@ def synth_one_sample(idx, targets, predictions, vocoder, model_config, preproces
     mel_target = targets[6][idx,:,:mel_len].unsqueeze(0)# .detach()
     mel_prediction = predictions[8]# .detach()
 
-    fig, data = plot_tensor(mel_prediction.squeeze().cpu())
-    save_plot(mel_target.squeeze().cpu(), os.path.join(path, "{}_gt.png".format(basename)))
-    save_plot(mel_prediction.squeeze().cpu(), os.path.join(path, "{}.png".format(basename)))
+    fig, data = plot_tensor(mel_target.squeeze().cpu())
+    fig_prediction, data_prediction = plot_tensor(mel_prediction.squeeze().cpu())
+    save_plot(mel_target.squeeze().cpu(), os.path.join(path, "{}_gt.png".format(basename[:-4])))
+    save_plot(mel_prediction.squeeze().cpu(), os.path.join(path, "{}.png".format(basename[:-4])))
 
     if vocoder is not None:
         from utils.mymodel import vocoder_infer
@@ -38,7 +39,7 @@ def synth_one_sample(idx, targets, predictions, vocoder, model_config, preproces
     else:
         wav_reconstruction = wav_prediction = None
 
-    return fig, wav_reconstruction, wav_prediction, basename
+    return fig, fig_prediction, wav_reconstruction, wav_prediction, basename[:-4]
 
 
 def synth_samples(targets, predictions, vocoder, model_config, preprocess_config, path):

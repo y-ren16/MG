@@ -77,7 +77,7 @@ def evaluate(save_path, model, step, configs, logger=None, vocoder=None):
               "Diff Loss: {:.4f}".format(*[step] + list(loss_means))
 
     if logger is not None:
-        fig, wav_reconstruction, wav_prediction, tag = synth_one_sample(
+        fig, fig_prediction, wav_reconstruction, wav_prediction, tag = synth_one_sample(
             B,
             batch22,
             output2,
@@ -86,14 +86,19 @@ def evaluate(save_path, model, step, configs, logger=None, vocoder=None):
             preprocess_config,
             save_path
         )
-        write(os.path.join(save_path,"{}_wav_reconstruction.wav").format(batch22[0][0][:-4]), 22050, wav_reconstruction)
-        write(os.path.join(save_path,"{}_wav_prediction.wav").format(batch22[0][0][:-4]), 22050, wav_prediction)
+        write(os.path.join(save_path,"{}_re.wav").format(batch22[0][0][:-4]), 22050, wav_reconstruction)
+        write(os.path.join(save_path,"{}_pre.wav").format(batch22[0][0][:-4]), 22050, wav_prediction)
 
         log(logger, step, losses=loss_means)
         log(
             logger,
             fig=fig,
-            tag="Validation/step_{}_{}".format(step, tag),
+            tag="Validation/gt_step_{}_{}".format(step, tag),
+        )
+        log(
+            logger,
+            fig=fig_prediction,
+            tag="Validation/pre_step_{}_{}".format(step, tag),
         )
         sampling_rate = preprocess_config["preprocessing"]["audio"]["sampling_rate"]
         log(
@@ -115,23 +120,34 @@ def evaluate(save_path, model, step, configs, logger=None, vocoder=None):
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
-    # parser.add_argument("--restore_epoch", type=int, default=30000)
-    # parser.add_argument(
-    #     "-p",
-    #     "--preprocess_config",
-    #     type=str,
-    #     required=True,
-    #     help="path to preprocess.yaml",
-    # )
-    # parser.add_argument(
-    #     "-m", "--model_config", type=str, required=True, help="path to model.yaml"
-    # )
-    # parser.add_argument(
-    #     "-t", "--train_config", type=str, required=True, help="path to train.yaml"
-    # )
+    parser.add_argument("--restore_epoch", type=int, default=None)
+    parser.add_argument(
+        "-p",
+        "--preprocess_config",
+        type=str,
+        default="config/AISHELL3/preprocess.yaml",
+        # required=True,
+        help="path to preprocess.yaml"
+    )
+    parser.add_argument(
+        "-m", 
+        "--model_config", 
+        type=str, 
+        default="config/AISHELL3/model.yaml",
+        # required=True, 
+        help="path to model.yaml"
+    )
+    parser.add_argument(
+        "-t", 
+        "--train_config", 
+        type=str, 
+        default="config/AISHELL3/train.yaml",
+        # required=True, 
+        help="path to train.yaml"
+    )
     args = parser.parse_args()
-    with open('./eva_args.txt', 'r') as f:
-        args.__dict__ = json.load(f)
+    # with open('./eva_args.txt', 'r') as f:
+    #     args.__dict__ = json.load(f)
     # Read Config
     preprocess_config = yaml.load(
         open(args.preprocess_config, "r"), Loader=yaml.FullLoader
@@ -139,6 +155,12 @@ if __name__ == "__main__":
     model_config = yaml.load(open(args.model_config, "r"), Loader=yaml.FullLoader)
     train_config = yaml.load(open(args.train_config, "r"), Loader=yaml.FullLoader)
     configs = (preprocess_config, model_config, train_config)
+
+    if args.restore_epoch is None:
+        ii = []
+        for pt_list in os.listdir(os.path.join(train_config["path"]["ckpt_path"],preprocess_config["dataset"],train_config["path"]["time"])):
+            ii.append(int(pt_list.split('.')[0]))
+        args.restore_epoch=max(ii)
 
     # Get model
     model = get_model(args, configs, device, train=False)
