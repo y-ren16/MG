@@ -9,7 +9,7 @@ from scipy.io import wavfile
 from matplotlib import pyplot as plt
 
 
-def synth_one_sample(idx, targets, predictions, vocoder, model_config, preprocess_config, path):
+def synth_one_sample(idx, targets, predictions, vocoder, model_config, preprocess_config, path, step):
 
     basename = targets[0][idx]
     mel_len = targets[7][idx]
@@ -18,8 +18,14 @@ def synth_one_sample(idx, targets, predictions, vocoder, model_config, preproces
 
     fig, data = plot_tensor(mel_target.squeeze().cpu())
     fig_prediction, data_prediction = plot_tensor(mel_prediction.squeeze().cpu())
-    save_plot(mel_target.squeeze().cpu(), os.path.join(path, "{}_gt.png".format(basename[:-4])))
-    save_plot(mel_prediction.squeeze().cpu(), os.path.join(path, "{}.png".format(basename[:-4])))
+    # save_plot(
+    #     mel_target.squeeze().cpu(),
+    #     os.path.join(path, f"step_{step}_{basename[:-4]}_gt.png"),
+    # )
+    # save_plot(
+    #     mel_prediction.squeeze().cpu(),
+    #     os.path.join(path, f"step_{step}_{basename[:-4]}.png"),
+    # )
 
     if vocoder is not None:
         from utils.mymodel import vocoder_infer
