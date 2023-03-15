@@ -94,12 +94,12 @@ def evaluate(save_path, model, step, configs, logger=None, vocoder=None):
         log(
             logger,
             fig=fig,
-            tag="Validation/gt_step_{}_{}".format(step, tag),
+            tag="Validation/step_{}_gt_{}".format(step, tag),
         )
         log(
             logger,
             fig=fig_prediction,
-            tag="Validation/pre_step_{}_{}".format(step, tag),
+            tag="Validation/step_{}_pre_{}".format(step, tag),
         )
         sampling_rate = preprocess_config["preprocessing"]["audio"]["sampling_rate"]
         log(
