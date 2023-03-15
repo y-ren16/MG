@@ -87,8 +87,8 @@ def evaluate(save_path, model, step, configs, logger=None, vocoder=None):
             save_path,
             step
         )
-        write(os.path.join(save_path,"step_{}_{}_re.wav").format(step, batch22[0][0][:-4]), 22050, wav_reconstruction)
-        write(os.path.join(save_path,"step_{}_{}_pre.wav").format(step, batch22[0][0][:-4]), 22050, wav_prediction)
+        write(os.path.join(save_path,"step_{}_{}_re.wav").format(step, batch22[0][B][:-4]), 22050, wav_reconstruction)
+        write(os.path.join(save_path,"step_{}_{}_pre.wav").format(step, batch22[0][B][:-4]), 22050, wav_prediction)
 
         log(logger, step, losses=loss_means)
         log(

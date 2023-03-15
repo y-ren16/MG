@@ -1,9 +1,9 @@
 {
-  "restore_epoch": 116,
-  "ckpt":"2023-03-13-03_54",
+  "restore_epoch": 700,
+  "ckpt":"2023-03-12-20_53",
   "dataset":"AISHELL3",
   "mode":"batch",
-  "source":"syn_ch.txt",
+  "source":"synthetic.txt",
   "speaker_id":150,
   "timesteps":50
 }

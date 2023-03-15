@@ -52,7 +52,7 @@ def evaluate(save_path, model, step, configs, logger=None, vocoder=None):
                         model_config,
                         preprocess_config,
                     )
-                    write(os.path.join(save_path,"step_{}_{}_wav_prediction.wav").format(step, batch[0][0][:-4]), 22050, wav_prediction)
+                    write(os.path.join(save_path,"step_{}_{}_wav_prediction.wav").format(step, batch[0][B][:-4]), 22050, wav_prediction)
                 num += 1
     print(num)
     return
@@ -85,7 +85,7 @@ if __name__ == "__main__":
     model_config = yaml.load(open(args.model_config, "r"), Loader=yaml.FullLoader)
     train_config = yaml.load(open(args.train_config, "r"), Loader=yaml.FullLoader)
     configs = (preprocess_config, model_config, train_config)
-
+    args.restore_epoch = None
     if args.restore_epoch is None:
         ii = [
             int(pt_list.split('.')[0])
@@ -102,7 +102,7 @@ if __name__ == "__main__":
     # Get model
     model = get_model(args, configs, device, train=False)
     vocoder = get_vocoder(model_config, device)
-    os.makedirs('./fake',exist_ok = True)
-    save_path = './fake'
+    os.makedirs('./fake1',exist_ok = True)
+    save_path = './fake1'
     evaluate(save_path, model, args.restore_epoch, configs, vocoder=vocoder)
 

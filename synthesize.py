@@ -15,6 +15,8 @@ from text import text_to_sequence
 import yaml
 from model.gradtts import GradTTS
 from utils.tools import to_device
+import random
+from tqdm import tqdm
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -82,27 +84,29 @@ def synthesize_one_sample(args, result_path, text, spk, language, cleaners, i=0)
 
     ids = raw_texts = [text[:100]]
     text_lens = np.array([x.shape[-1]])
+    spk = spk = np.array([random.randint(0,217)])
     speakers = spk
     phones = x
 
     t = dt.datetime.now()
     batchs = [(ids, raw_texts, speakers, phones, text_lens, max(text_lens))]
     batch = to_device(batchs[0], device)
-    (
-        mu_x,
-        logw,
-        x_mask,
-        y_mask,
-        attn,
-        mu_y,
-        mels,
-        encoder_outputs,
-        decoder_outputs
-    ) = generator(*(batch[2:]), n_timesteps=args.timesteps, temperature=1, stoc=False, length_scale=1)
+    # (
+    #     mu_x,
+    #     logw,
+    #     x_mask,
+    #     y_mask,
+    #     attn,
+    #     mu_y,
+    #     mels,
+    #     encoder_outputs,
+    #     decoder_outputs
+    # ) 
+    outputs = generator(*(batch[2:]), n_timesteps=args.timesteps, temperature=1, stoc=False, length_scale=1)
     t = (dt.datetime.now() - t).total_seconds()
     sample_rate = 22050
-    print(f'Grad-TTS RTF: {t * sample_rate / (decoder_outputs.shape[-1] * 256)}')
-    audio = (vocoder.forward(decoder_outputs).cpu().squeeze().clamp(-1, 1).numpy() * 32768).astype(np.int16)
+    # print(f'Grad-TTS RTF: {t * sample_rate / (outputs[8].shape[-1] * 256)}')
+    audio = (vocoder.forward(outputs[8]).cpu().squeeze().clamp(-1, 1).numpy() * 32768).astype(np.int16)
 
     if args.speaker_id:
         write(
@@ -120,72 +124,72 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
 
-    parser.add_argument(
-        '-r',
-        '--restore_epoch',
-        type=int,
-        # required=True,
-        default=100,
-        help='restore_epoch of Grad-TTS'
-    )
-    parser.add_argument(
-        '-c',
-        '--ckpt',
-        type=str,
-        # required=True,
-        default="2023-03-11-02_53",
-        help='path to a checkpoint of Grad-TTS'
-    )
-    parser.add_argument(
-        '-d',
-        "--dataset",
-        type=str,
-        # required=True,
-        default="LJSpeech",
-        help="dataset yaml",
-    )
-    parser.add_argument(
-        '-m',
-        "--mode",
-        type=str,
-        choices=["batch", "single"],
-        # required=True,
-        default="batch",
-        help="Synthesize a whole dataset or a single sentence",
-    )
-    parser.add_argument(
-        '-s',
-        "--source",
-        type=str,
-        default="syn_en.txt",
-        help="path to a source file with format like train.txt and val.txt, for batch mode only",
-    )
-    parser.add_argument(
-        '-t',
-        "--text",
-        type=str,
-        default=None,
-        help="raw text to synthesize, for single-sentence mode only",
-    )
-    parser.add_argument(
-        '-id',
-        "--speaker_id",
-        type=int,
-        default=None,
-        help="speaker ID for multi-speaker synthesis, for single-sentence mode only",
-    )
-    parser.add_argument(
-        '-time',
-        '--timesteps',
-        type=int,
-        required=False,
-        default=50,
-        help='number of timesteps of reverse diffusion'
-    )
+    # parser.add_argument(
+    #     '-r',
+    #     '--restore_epoch',
+    #     type=int,
+    #     # required=True,
+    #     default=100,
+    #     help='restore_epoch of Grad-TTS'
+    # )
+    # parser.add_argument(
+    #     '-c',
+    #     '--ckpt',
+    #     type=str,
+    #     # required=True,
+    #     default="2023-03-11-02_53",
+    #     help='path to a checkpoint of Grad-TTS'
+    # )
+    # parser.add_argument(
+    #     '-d',
+    #     "--dataset",
+    #     type=str,
+    #     # required=True,
+    #     default="LJSpeech",
+    #     help="dataset yaml",
+    # )
+    # parser.add_argument(
+    #     '-m',
+    #     "--mode",
+    #     type=str,
+    #     choices=["batch", "single"],
+    #     # required=True,
+    #     default="batch",
+    #     help="Synthesize a whole dataset or a single sentence",
+    # )
+    # parser.add_argument(
+    #     '-s',
+    #     "--source",
+    #     type=str,
+    #     default="syn_en.txt",
+    #     help="path to a source file with format like train.txt and val.txt, for batch mode only",
+    # )
+    # parser.add_argument(
+    #     '-t',
+    #     "--text",
+    #     type=str,
+    #     default=None,
+    #     help="raw text to synthesize, for single-sentence mode only",
+    # )
+    # parser.add_argument(
+    #     '-id',
+    #     "--speaker_id",
+    #     type=int,
+    #     default=None,
+    #     help="speaker ID for multi-speaker synthesis, for single-sentence mode only",
+    # )
+    # parser.add_argument(
+    #     '-time',
+    #     '--timesteps',
+    #     type=int,
+    #     required=False,
+    #     default=50,
+    #     help='number of timesteps of reverse diffusion'
+    # )
 
     args = parser.parse_args()
-    # with open('./syn_args.txt', 'r') as f:
-    #     args.__dict__ = json.load(f)
+    with open('./syn_args.txt', 'r') as f:
+        args.__dict__ = json.load(f)
 
     preprocess_config_path = os.path.join("config", args.dataset, "preprocess.yaml")
     model_config_path = os.path.join("config", args.dataset, "model.yaml")
@@ -252,7 +256,7 @@ if __name__ == "__main__":
         with open(os.path.join('resources/filelists', args.source), 'r', encoding='utf-8') as f:
             texts = [line.strip() for line in f.readlines()]
         with torch.no_grad():
-            for i, text in enumerate(texts):
+            for i, text in tqdm(enumerate(texts)):
                 synthesize_one_sample(args, result_path, text, spk, language, cleaners, i)
 
     if args.mode == "single":
