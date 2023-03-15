@@ -1,5 +1,7 @@
 **/__pycache__
 **/Temp
+**/fake
+**/fake1
 
 *.out
 *.png
