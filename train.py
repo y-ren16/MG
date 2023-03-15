@@ -20,7 +20,7 @@ from torch.distributed import init_process_group
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.utils.data import DistributedSampler, DataLoader
 import torch.multiprocessing as mp
-# from evaluate import evaluate
+from evaluate import evaluate
 # gpus = [0, 1, 2, 4, 5, 6, 7]
 # torch.cuda.set_device('cuda:{}'.format(gpus[0]))
 # device = torch.device("cuda:{}".format(gpus[0]) if torch.cuda.is_available() else "cpu")
@@ -118,8 +118,8 @@ def main(rank, args, configs):
             if rank == 0:
                 losses = [l.item() for l in losses]
                 log(train_logger, step, losses=losses)
-                print('Steps : {:d}, Total Loss: {:.4f}, Dur Loss: {:.4f}, Prior PostNet Loss: {:.4f}, '
-                      'Diff Loss: {:.4f}, s/b : {:4.3f}'.format(step, *losses, time.time() - start_b))
+                print('Steps : {:d}/{:d}, Total Loss: {:.4f}, Dur Loss: {:.4f}, Prior PostNet Loss: {:.4f}, '
+                      'Diff Loss: {:.4f}, s/b : {:4.3f}'.format(step,len(train_loader), *losses, time.time() - start_b))
             step += 1
         if rank == 0:
             if epoch % log_epoch == 0:
@@ -134,6 +134,8 @@ def main(rank, args, configs):
                 ckpt = model.module.state_dict()
                 torch.save(ckpt, os.path.join(ckpt_path, "{}.pt".format(epoch)))
             print('Time taken for epoch {} is {} sec\n'.format(epoch + 1, int(time.time() - start)))
+            if epoch % val_epoch == 0:
+                evaluate('./Temp', model, epoch, configs, logger=val_logger, vocoder=vocoder)
 
 
 if __name__ == '__main__':

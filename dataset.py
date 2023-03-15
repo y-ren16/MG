@@ -96,7 +96,7 @@ class TextMelDataset(Dataset):
 
         if self.language == 'en':
             symbols_length = len(symbols_en)
-        elif self.language == 'en':
+        elif self.language == 'fr':
             symbols_length = len(symbols_fr)
         elif self.language == 'ch':
             symbols_length = len(symbols_ch)
@@ -114,8 +114,11 @@ class TextMelDataset(Dataset):
             # add a blank token, whose id number is len(symbols)
 
         phone = torch.LongTensor(phone)
+        # audio, sr = torchaudio.load(
+        #     os.path.join(self.wav_path, basename[:-8], basename)
+        # )
         audio, sr = torchaudio.load(
-            os.path.join(self.wav_path, basename[:-8], basename)
+            os.path.join(self.wav_path,self.dataset_name, basename)
         )
         assert sr == self.sample_rate
         mel = mel_spectrogram(audio, self.n_fft, self.n_mels, self.sample_rate, self.hop_length,
