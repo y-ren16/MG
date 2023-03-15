@@ -5,7 +5,7 @@ path:
 random_seed: 37
 num_gpus: 4
 optimizer:
-  batch_size: 24
+  batch_size: 16
   group_size: 6
   learning_rate: 0.0001
   grad_clip_thresh: 1.0

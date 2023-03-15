@@ -23,19 +23,33 @@ def text_to_sequence(language, have_phone, text, cleaner_names, dictionary=None)
     sequence = []
 
     if (len(text) > 0) & (language == 'fr'):
-        skip = False
-        SAMPA_i = text
-        for j in range(len(SAMPA_i)):
-            if skip:
-                skip = False
-                continue
-            if j == len(SAMPA_i) - 1:
-                sequence.append(_symbol_to_id_fr[SAMPA_i[j]])
-            elif SAMPA_i[j + 1] == '~':
-                sequence.append(_symbol_to_id_fr[SAMPA_i[j] + '~'])
-                skip = True
-            else:
-                sequence.append(_symbol_to_id_fr[SAMPA_i[j]])
+        # skip = False
+        # SAMPA_i = text
+        # for j in range(len(SAMPA_i)):
+        #     if skip:
+        #         skip = False
+        #         continue
+        #     if j == len(SAMPA_i) - 1:
+        #         sequence.append(_symbol_to_id_fr[SAMPA_i[j]])
+        #     elif SAMPA_i[j + 1] == '~':
+        #         sequence.append(_symbol_to_id_fr[SAMPA_i[j] + '~'])
+        #         skip = True
+        #     else:
+        #         sequence.append(_symbol_to_id_fr[SAMPA_i[j]])
+        space = _symbols_to_sequence_fr(' ')
+        for pp in text.split():
+            iippaa = []
+            for j in pp:
+                if j == '̃':
+                    iippaa[-1] = iippaa[-1] + j
+                elif j == 'ː': 
+                    continue   
+                else:
+                    iippaa.append(j)
+            ipa = ' '.join([i for i in iippaa])
+            sequence += _arpabet_to_sequence_fr(ipa)
+            sequence += space
+        sequence = sequence[:-1] if sequence[-1] == space[0] else sequence
     if language == 'en':
         space = _symbols_to_sequence_en(' ')
         while len(text):
@@ -110,3 +124,14 @@ def _arpabet_to_sequence_ch(text):
 
 def _should_keep_symbol_ch(s):
     return s in _symbol_to_id_ch and s != '_' and s != '~'
+
+def _symbols_to_sequence_fr(symbols):
+    return [_symbol_to_id_fr[s] for s in symbols if _should_keep_symbol_fr(s)]
+
+
+def _arpabet_to_sequence_fr(text):
+    return _symbols_to_sequence_fr(['@' + s for s in text.split()])
+
+
+def _should_keep_symbol_fr(s):
+    return s in _symbol_to_id_fr and s != '_' and s != '~'

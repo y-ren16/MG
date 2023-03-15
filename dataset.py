@@ -209,12 +209,12 @@ if __name__ == "__main__":
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     import os
 
-    os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3"
+    os.environ["CUDA_VISIBLE_DEVICES"] = "0"
     preprocess_config = yaml.load(
-        open("./config/BC2023/preprocess.yaml", "r"), Loader=yaml.FullLoader
+        open("./config/NEB/preprocess.yaml", "r"), Loader=yaml.FullLoader
     )
     train_config = yaml.load(
-        open("./config/BC2023/train.yaml", "r"), Loader=yaml.FullLoader
+        open("./config/NEB/train.yaml", "r"), Loader=yaml.FullLoader
     )
 
     train_dataset = TextMelDataset(

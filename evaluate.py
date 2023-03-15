@@ -53,10 +53,10 @@ def evaluate(save_path, model, step, configs, logger=None, vocoder=None):
     loss_sums = [0 for _ in range(4)]
     import random
     sys_one = True
-    B = random.randint(0,batch_size)
+    B = random.randint(0,batch_size-1)
     for batchs in loader:
         num = 0
-        A = random.randint(0,len(batchs))
+        A = random.randint(0,len(batchs)-1)
         for batch in batchs:
             with torch.no_grad():
                 if sys_one & (num == A):

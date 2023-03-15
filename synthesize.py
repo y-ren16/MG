@@ -249,7 +249,7 @@ if __name__ == "__main__":
     elif language == "ch":
         symbols = symbols_ch
 
-    result_path = os.path.join(train_config['path']['result_path'], args.dataset)
+    result_path = os.path.join(train_config['path']['result_path'], args.dataset, '2')
     os.makedirs(result_path, exist_ok=True)
     # Preprocess texts
     if args.mode == "batch":

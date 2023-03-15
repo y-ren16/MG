@@ -16,7 +16,16 @@ fr_SAMPA = [
     'i', 'o', 'O', 'o~', 'u', 'y'
 ]
 
-symbols_fr = [_pad] + list(_special) + list(_punctuation) + fr_SAMPA
+fr_IPA = [
+    'b','d','f','ɡ','ɥ','j','k','l','m','n',
+    'ɲ','ŋ','p','ʁ','s','ʃ','t','v','w','z',
+    'ʒ','ø','œ','œ̃','ə','a','ɑ̃','e','ɛ','ɛ̃',
+    'i','o','ɔ','ɔ̃','u','y'
+]
+
+fr_arpabet = ['@' + s for s in fr_IPA]
+
+symbols_fr = [_pad] + list(_special) + list(_punctuation) + fr_arpabet
 
 _arpabet = ['@' + s for s in cmudict.valid_symbols]
 
