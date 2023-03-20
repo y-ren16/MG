@@ -17,15 +17,21 @@ from model.gradtts import GradTTS
 from utils.tools import to_device
 import random
 from tqdm import tqdm
+from phonemizer.backend import EspeakBackend
+backend = EspeakBackend(language='fr-fr')
+from phonemizer.backend import EspeakMbrolaBackend
+backend2 = EspeakMbrolaBackend(language='mb-fr2')
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-HIFIGAN_CONFIG = '../MG-Data/hifigan_ckpt/UNIVERSAL_V1/config.json'
-HIFIGAN_CHECKPT = '../MG-Data/hifigan_ckpt/UNIVERSAL_V1/g_02500000'
+# HIFIGAN_CONFIG = '../MG-Data/hifigan_ckpt/UNIVERSAL_V1/config.json'
+# HIFIGAN_CHECKPT = '../MG-Data/hifigan_ckpt/UNIVERSAL_V1/g_02500000'
 # HIFIGAN_CONFIG = './hifigan/config.json'
 # HIFIGAN_CHECKPT = './hifigan/generator_universal.pth.tar.zip'
 # HIFIGAN_CONFIG = './LJ_FT_T2_V3/config.json'
 # HIFIGAN_CHECKPT = './LJ_FT_T2_V3/generator_v3'
+HIFIGAN_CONFIG = '../MG-Data/hifigan_ckpt/EN/config.json'
+HIFIGAN_CHECKPT = '../MG-Data/hifigan_ckpt/EN/generator_LJSpeech.pth.tar'
 
 
 def intersperse(lst, item):
@@ -67,6 +73,12 @@ def preprocess_mandarin(text):
     # print(f"Raw Text Sequence: {text}")
     # print(f"Phoneme Sequence: {phones}")
     return phones
+def preprocess_fr(text):
+    # phones = []
+    phonemized = backend.phonemize([text])
+    phones = phonemized
+    print(phones)
+    return phones[0]
 
 
 def synthesize_one_sample(args, result_path, text, spk, language, cleaners, i=0):
@@ -79,6 +91,7 @@ def synthesize_one_sample(args, result_path, text, spk, language, cleaners, i=0)
             intersperse(text_to_sequence(language, False, text, cleaners), len(symbols_en))])
     else:
         # if language == "fr":
+        text = preprocess_fr(text)
         x = np.array([
             intersperse(text_to_sequence(language, True, text, cleaners), len(symbols_fr))])
 
@@ -124,72 +137,80 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
 
-    # parser.add_argument(
-    #     '-r',
-    #     '--restore_epoch',
-    #     type=int,
-    #     # required=True,
-    #     default=100,
-    #     help='restore_epoch of Grad-TTS'
-    # )
-    # parser.add_argument(
-    #     '-c',
-    #     '--ckpt',
-    #     type=str,
-    #     # required=True,
-    #     default="2023-03-11-02_53",
-    #     help='path to a checkpoint of Grad-TTS'
-    # )
-    # parser.add_argument(
-    #     '-d',
-    #     "--dataset",
-    #     type=str,
-    #     # required=True,
-    #     default="LJSpeech",
-    #     help="dataset yaml",
-    # )
-    # parser.add_argument(
-    #     '-m',
-    #     "--mode",
-    #     type=str,
-    #     choices=["batch", "single"],
-    #     # required=True,
-    #     default="batch",
-    #     help="Synthesize a whole dataset or a single sentence",
-    # )
-    # parser.add_argument(
-    #     '-s',
-    #     "--source",
-    #     type=str,
-    #     default="syn_en.txt",
-    #     help="path to a source file with format like train.txt and val.txt, for batch mode only",
-    # )
-    # parser.add_argument(
-    #     '-t',
-    #     "--text",
-    #     type=str,
-    #     default=None,
-    #     help="raw text to synthesize, for single-sentence mode only",
-    # )
-    # parser.add_argument(
-    #     '-id',
-    #     "--speaker_id",
-    #     type=int,
-    #     default=None,
-    #     help="speaker ID for multi-speaker synthesis, for single-sentence mode only",
-    # )
-    # parser.add_argument(
-    #     '-time',
-    #     '--timesteps',
-    #     type=int,
-    #     required=False,
-    #     default=50,
-    #     help='number of timesteps of reverse diffusion'
-    # )
+    parser.add_argument(
+        '-r',
+        '--restore_epoch',
+        type=int,
+        # required=True,
+        default=100,
+        help='restore_epoch of Grad-TTS'
+    )
+    parser.add_argument(
+        '-c',
+        '--ckpt',
+        type=str,
+        # required=True,
+        default="2023-03-11-02_53",
+        help='path to a checkpoint of Grad-TTS'
+    )
+    parser.add_argument(
+        '-d',
+        "--dataset",
+        type=str,
+        # required=True,
+        default="LJSpeech",
+        help="dataset yaml",
+    )
+    parser.add_argument(
+        '-m',
+        "--mode",
+        type=str,
+        choices=["batch", "single"],
+        # required=True,
+        default="batch",
+        help="Synthesize a whole dataset or a single sentence",
+    )
+    parser.add_argument(
+        '-s',
+        "--source",
+        type=str,
+        default="syn_en.txt",
+        help="path to a source file with format like train.txt and val.txt, for batch mode only",
+    )
+    parser.add_argument(
+        '-t',
+        "--text",
+        type=str,
+        default=None,
+        help="raw text to synthesize, for single-sentence mode only",
+    )
+    parser.add_argument(
+        '-id',
+        "--speaker_id",
+        type=int,
+        default=None,
+        help="speaker ID for multi-speaker synthesis, for single-sentence mode only",
+    )
+    parser.add_argument(
+        '-time',
+        '--timesteps',
+        type=int,
+        required=False,
+        default=50,
+        help='number of timesteps of reverse diffusion'
+    )
+    parser.add_argument(
+        '-dir',
+        '--result_dir',
+        type=str,
+        required=False,
+        default='2',
+        help='number of timesteps of reverse diffusion'
+    )
 
     args = parser.parse_args()
-    with open('./syn_args.txt', 'r') as f:
-        args.__dict__ = json.load(f)
+    # with open('./syn_args.txt', 'r') as f:
+    #     args.__dict__ = json.load(f)
 
     preprocess_config_path = os.path.join("config", args.dataset, "preprocess.yaml")
     model_config_path = os.path.join("config", args.dataset, "model.yaml")
@@ -217,7 +238,7 @@ if __name__ == "__main__":
 
     generator = GradTTS(preprocess_config, model_config).to(device)
     # generator = get_model(args, configs, device, train=False).to(device)
-    # generator = torch.nn.DataParallel(generator)
+    generator = torch.nn.DataParallel(generator)
     checkpoint = torch.load(
             os.path.join(
                 train_config["path"]["ckpt_path"], preprocess_config["dataset"], args.ckpt, f'{args.restore_epoch}.pt'
@@ -249,7 +270,7 @@ if __name__ == "__main__":
     elif language == "ch":
         symbols = symbols_ch
 
-    result_path = os.path.join(train_config['path']['result_path'], args.dataset, '2')
+    result_path = os.path.join(train_config['path']['result_path'], args.dataset, args.result_dir)
     os.makedirs(result_path, exist_ok=True)
     # Preprocess texts
     if args.mode == "batch":

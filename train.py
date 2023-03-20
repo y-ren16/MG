@@ -134,8 +134,8 @@ def main(rank, args, configs):
                 ckpt = model.module.state_dict()
                 torch.save(ckpt, os.path.join(ckpt_path, "{}.pt".format(epoch)))
             print('Time taken for epoch {} is {} sec\n'.format(epoch + 1, int(time.time() - start)))
-            if epoch % val_epoch == 0:
-                evaluate('./Temp', model, epoch, configs, logger=val_logger, vocoder=vocoder)
+            if epoch % val_epoch == 0 and losses[0]<100:
+                evaluate(val_log_path, model, epoch, configs, logger=val_logger, vocoder=vocoder)
 
 
 if __name__ == '__main__':

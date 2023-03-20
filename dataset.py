@@ -70,6 +70,8 @@ class TextMelDataset(Dataset):
             raw_text = []
             for line in f.readlines():
                 data_col = line.strip("\n").split("|")
+                # if len(data_col[self.raw_text_col]) > 100:
+                #     continue
                 name.append(data_col[self.name_col])
                 if self.speaker_col < 100:
                     speaker.append(data_col[self.speaker_col])
@@ -120,6 +122,9 @@ class TextMelDataset(Dataset):
         audio, sr = torchaudio.load(
             os.path.join(self.wav_path,self.dataset_name, basename)
         )
+        # audio, sr = torchaudio.load(
+        #     os.path.join(self.wav_path, basename)
+        # )
         assert sr == self.sample_rate
         mel = mel_spectrogram(audio, self.n_fft, self.n_mels, self.sample_rate, self.hop_length,
                               self.win_length, self.f_min, self.f_max, center=False).squeeze()
