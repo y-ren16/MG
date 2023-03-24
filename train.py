@@ -41,6 +41,7 @@ def main(rank, args, configs):
     dataset_name = preprocess_config["dataset"]
     batch_size = train_config["optimizer"]["batch_size"]
     group_size = train_config["optimizer"]["group_size"]
+    num_workers = train_config["optimizer"]["num_workers"]
     grad_clip_thresh = train_config["optimizer"]["grad_clip_thresh"]
     dataset = TextMelDataset(
         "train.txt", preprocess_config, train_config, sort=True, drop_last=True
@@ -48,13 +49,13 @@ def main(rank, args, configs):
     train_sampler = DistributedSampler(dataset) if num_gpus > 1 else None
     train_loader = DataLoader(
         dataset,
-        num_workers=group_size,
+        num_workers=num_workers,
         shuffle=False,
         sampler=train_sampler,
         batch_size=batch_size,
         pin_memory=True,
         drop_last=True,
-        collate_fn=dataset.collate_fn
+        collate_fn=dataset.collate_fn_DDP
     )
     model = GradTTS(preprocess_config, model_config).to(device)
     if num_gpus > 1:
@@ -107,24 +108,28 @@ def main(rank, args, configs):
         for i, batch in enumerate(train_loader):
             if rank == 0:
                 start_b = time.time()
-            batch = to_device(batch[0], device, non_blocking=True)
+            batch = to_device(batch, device, non_blocking=True)
             optimizer.zero_grad()
             output = model(*(batch[2:]))
             losses = Loss(batch, output)
             total_loss = losses[0]
             total_loss.backward()
-            nn.utils.clip_grad_norm_(model.parameters(), grad_clip_thresh)
+            # all_grad_norm = nn.utils.clip_grad_norm_(model.parameters(), grad_clip_thresh)
+            enc_grad_norm = torch.nn.utils.clip_grad_norm_(model.module.encoder.parameters(),
+                                                               max_norm=1)
+            dec_grad_norm = torch.nn.utils.clip_grad_norm_(model.module.decoder.parameters(),
+                                                               max_norm=1)
             optimizer.step()
             if rank == 0:
                 losses = [l.item() for l in losses]
-                log(train_logger, step, losses=losses)
-                print('Steps : {:d}/{:d}, Total Loss: {:.4f}, Dur Loss: {:.4f}, Prior PostNet Loss: {:.4f}, '
+                log(train_logger, step, losses=losses, enc_grad_norm=enc_grad_norm, dec_grad_norm=dec_grad_norm)
+                print('Steps : {:d}/{:d}, Total Loss: {:.4f}, Dur Loss: {:.4f}, Prior Loss: {:.4f}, '
                       'Diff Loss: {:.4f}, s/b : {:4.3f}'.format(step,len(train_loader), *losses, time.time() - start_b))
             step += 1
         if rank == 0:
             if epoch % log_epoch == 0:
                 message1 = "Epoch {}/{}, Step{}, ".format(epoch, total_epoch, step)
-                message2 = "Total Loss: {:.4f}, Dur Loss: {:.4f}, Prior PostNet Loss: {:.4f}, Diff Loss: {:.4f}" \
+                message2 = "Total Loss: {:.4f}, Dur Loss: {:.4f}, Prior Loss: {:.4f}, Diff Loss: {:.4f}" \
                     .format(*losses)
                 with open(os.path.join(train_log_path, "log.txt"), "a") as f:
                     f.write(message1 + message2 + "\n")
@@ -177,7 +182,7 @@ if __name__ == '__main__':
     torch.manual_seed(train_config["random_seed"])
     num_gpus = torch.cuda.device_count()
 
-    if train_config["num_gpus"] > 1:
+    if num_gpus > 1:
         mp.spawn(main, nprocs=num_gpus, args=(args, configs,))
     else:
         main(0, args, configs)

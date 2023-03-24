@@ -6,8 +6,12 @@ from text import text_to_sequence, cmudict
 from text.symbols import symbols_fr, symbols_en, symbols_ch
 import torchaudio
 from hifigan import mel_spectrogram
-from utils.tools import pad_1D, pad_2D
+from utils.tools import pad_1D, pad_2D, pad_2D_new
 import json
+import librosa
+import librosa.display
+import numpy as np
+import matplotlib.pyplot as plt
 
 
 class TextMelDataset(Dataset):
@@ -103,7 +107,7 @@ class TextMelDataset(Dataset):
         elif self.language == 'ch':
             symbols_length = len(symbols_ch)
 
-
+        # if phone is not none in dataset
         if self.phone_col < 100:
             phone = np.array(text_to_sequence(self.language, True, self.text[index], self.cleaners))
         else:
@@ -112,22 +116,39 @@ class TextMelDataset(Dataset):
         if self.add_blank:
             result = [symbols_length] * (len(phone) * 2 + 1)
             result[1::2] = phone
-            phone = result
+            phone = np.array(result)
             # add a blank token, whose id number is len(symbols)
 
-        phone = torch.LongTensor(phone)
+        # phone = torch.LongTensor(phone)
+
         # audio, sr = torchaudio.load(
         #     os.path.join(self.wav_path, basename[:-8], basename)
         # )
-        audio, sr = torchaudio.load(
-            os.path.join(self.wav_path,self.dataset_name, basename)
-        )
         # audio, sr = torchaudio.load(
-        #     os.path.join(self.wav_path, basename)
+        #     os.path.join(self.wav_path,self.dataset_name, basename)
         # )
+        audio, sr = torchaudio.load(
+            os.path.join(self.wav_path, basename)
+        )
         assert sr == self.sample_rate
         mel = mel_spectrogram(audio, self.n_fft, self.n_mels, self.sample_rate, self.hop_length,
                               self.win_length, self.f_min, self.f_max, center=False).squeeze()
+        mel = np.array(mel)
+        # audio, sr = librosa.load(
+        #     os.path.join(self.wav_path, basename)
+        # )
+        # assert sr == self.sample_rate
+        # mel = librosa.feature.melspectrogram(y=audio, sr=sr, n_mels=self.n_mels,
+        #                                     n_fft=self.n_fft, hop_length=self.hop_length,
+        #                                     win_length=self.win_length, fmin=self.f_min, fmax=self.f_max,center=False
+        #                                     ) 
+        # print(basename)
+        # print(speaker)
+        # print(phone.dtype) # int64 array
+        # print(phone.shape)
+        # print(raw_text)
+        # print(mel.dtype) # float32 array
+        # print(mel.shape) # (80,846)
 
 
         sample = {
@@ -135,7 +156,7 @@ class TextMelDataset(Dataset):
             "speaker": speaker,
             "text": phone,
             "raw_text": raw_text,
-            "mel": mel.T,
+            "mel": mel,
         }
 
         return sample
@@ -203,6 +224,55 @@ class TextMelDataset(Dataset):
 
         return output
 
+    def collate_fn_DDP(self, data):
+        ids = []
+        speakers = []
+        texts = []
+        raw_texts = []
+        mels = []
+        for sample in data:
+            ids.append(sample['id'])
+            speakers.append(sample['speaker'])
+            texts.append(sample['text'])
+            raw_texts.append(sample['raw_text'])
+            mels.append(sample['mel'])
+        text_lens = np.array([text.shape[0] for text in texts])
+        mel_lens = np.array([mel.shape[1] for mel in mels])
+        speakers = np.array(speakers)
+        # print(ids) # list[string]
+        # print(speakers) # list[int]
+        # print(texts) # list[array int64]
+        # print(mels) # list[array float32]
+        # print(text_lens.dtype) # array int64
+        # print(text_lens.shape) # (16,)
+        # print(mel_lens.dtype) # array int64
+        # print(mel_lens.shape) # (16,)
+        # print(speakers.dtype) # array int64
+        # print(speakers.shape) # (16,)
+        def fix_len_compatibility(length, num_downsamplings_in_unet=2):
+            while True:
+                if length % (2 ** num_downsamplings_in_unet) == 0:
+                    return length
+                length += 1
+        max_mel_len = max(mel_lens)
+        max_mel_len = fix_len_compatibility(max_mel_len) # int
+        max_text_lens = max(text_lens) # int
+        texts = pad_1D(texts)# (16,max_text_len) int64
+        mels = pad_2D_new(mels, max_mel_len) # (16,80,max_mel_len) float32
+
+        return (
+            ids,
+            raw_texts,
+            speakers,
+            texts,
+            text_lens,
+            max_text_lens,
+            mels,
+            mel_lens,
+            max_mel_len,
+        )
+        return output
+
 
 if __name__ == "__main__":
     # Test
@@ -216,10 +286,10 @@ if __name__ == "__main__":
 
     os.environ["CUDA_VISIBLE_DEVICES"] = "0"
     preprocess_config = yaml.load(
-        open("./config/NEB/preprocess.yaml", "r"), Loader=yaml.FullLoader
+        open("./config/LJSpeech/preprocess.yaml", "r"), Loader=yaml.FullLoader
     )
     train_config = yaml.load(
-        open("./config/NEB/train.yaml", "r"), Loader=yaml.FullLoader
+        open("./config/LJSpeech/train.yaml", "r"), Loader=yaml.FullLoader
     )
 
     train_dataset = TextMelDataset(
@@ -228,37 +298,46 @@ if __name__ == "__main__":
     val_dataset = TextMelDataset(
         "valid.txt", preprocess_config, train_config, sort=False, drop_last=False
     )
+    # train_loader = DataLoader(
+    #     train_dataset,
+    #     batch_size=train_config["optimizer"]["batch_size"] * 4,
+    #     shuffle=True,
+    #     collate_fn=train_dataset.collate_fn,
+    # )
+    # val_loader = DataLoader(
+    #     val_dataset,
+    #     batch_size=train_config["optimizer"]["batch_size"],
+    #     shuffle=False,
+    #     collate_fn=val_dataset.collate_fn,
+    # )
     train_loader = DataLoader(
         train_dataset,
-        batch_size=train_config["optimizer"]["batch_size"] * 4,
-        shuffle=True,
-        collate_fn=train_dataset.collate_fn,
-    )
-    val_loader = DataLoader(
-        val_dataset,
         batch_size=train_config["optimizer"]["batch_size"],
         shuffle=False,
-        collate_fn=val_dataset.collate_fn,
+        collate_fn=train_dataset.collate_fn_DDP,
     )
-
     n_batch = 0
-    for batchs in train_loader:
-        for batch in batchs:
-            to_device(batch, device)
-            n_batch += 1
-    print(
-        "Training set  with size {} is composed of {} batches.".format(
-            len(train_dataset), n_batch
-        )
-    )
+    for batch in train_loader:
+        to_device(batch, device)
+        n_batch += 1
+    # n_batch = 0
+    # for batchs in train_loader:
+    #     for batch in batchs:
+    #         to_device(batch, device)
+    #         n_batch += 1
+    # print(
+    #     "Training set  with size {} is composed of {} batches.".format(
+    #         len(train_dataset), n_batch
+    #     )
+    # )
 
-    n_batch = 0
-    for batchs in val_loader:
-        for batch in batchs:
-            to_device(batch, device)
-            n_batch += 1
-    print(
-        "Validation set  with size {} is composed of {} batches.".format(
-            len(val_dataset), n_batch
-        )
-    )
+    # n_batch = 0
+    # for batchs in val_loader:
+    #     for batch in batchs:
+    #         to_device(batch, device)
+    #         n_batch += 1
+    # print(
+    #     "Validation set  with size {} is composed of {} batches.".format(
+    #         len(val_dataset), n_batch
+    #     )
+    # )

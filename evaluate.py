@@ -30,7 +30,7 @@ def evaluate(save_path, model, step, configs, logger=None, vocoder=None):
         dataset,
         batch_size=batch_size,
         shuffle=False,
-        collate_fn=dataset.collate_fn,
+        collate_fn=dataset.collate_fn_DDP,
     )
 
     # Get loss function
@@ -53,25 +53,28 @@ def evaluate(save_path, model, step, configs, logger=None, vocoder=None):
     loss_sums = [0 for _ in range(4)]
     import random
     sys_one = True
+    num_batches = 0
+    for batch in loader:
+        num_batches += 1
+    A = random.randint(0,num_batches-2)
     B = random.randint(0,batch_size-1)
-    for batchs in loader:
-        num = 0
-        A = random.randint(0,len(batchs)-1)
-        for batch in batchs:
-            with torch.no_grad():
-                if sys_one & (num == A):
-                    batch2 = (batch[0][B], batch[1][B],np.array(batch[2][B]), batch[3][B], np.array(batch[4][B]), batch[5])
-                    batch2 = to_device(batch2, device)
-                    batch2 = fff(batch2)
-                    output2 = model(*(batch2), n_timesteps=50, temperature=1, stoc=False, length_scale=1)
-                    batch22 = to_device(batch, device)
-                    sys_one = False
-                batch = to_device(batch, device)
-                output = model(*(batch[2:]))
-                losses = Loss(batch, output)
-                for i in range(len(losses)):
-                    loss_sums[i] += losses[i].item() * len(batch[0])
-            num += 1
+    # B = 0
+    num = 0
+    for batch in loader:
+        with torch.no_grad():
+            if sys_one & (num == A):
+                batch2 = (batch[0][B], batch[1][B],np.array(batch[2][B]), batch[3][B], np.array(batch[4][B]), batch[5])
+                batch2 = to_device(batch2, device)
+                batch2 = fff(batch2)
+                output2 = model(*(batch2))
+                batch22 = to_device(batch, device)
+                sys_one = False
+            batch = to_device(batch, device)
+            output = model(*(batch[2:]))
+            losses = Loss(batch, output)
+            for i in range(len(losses)):
+                loss_sums[i] += losses[i].item() * len(batch[0])
+        num += 1
     loss_means = [loss_sum / len(dataset) for loss_sum in loss_sums]
     message = "Validation Step {}, Total Loss: {:.4f}, Dur Loss: {:.4f}, Prior PostNet Loss: {:.4f}, " \
               "Diff Loss: {:.4f}".format(*[step] + list(loss_means))
@@ -126,7 +129,7 @@ if __name__ == "__main__":
         "-p",
         "--preprocess_config",
         type=str,
-        default="config/AISHELL3/preprocess.yaml",
+        default="config/LJSpeech/preprocess.yaml",
         # required=True,
         help="path to preprocess.yaml"
     )
@@ -134,7 +137,7 @@ if __name__ == "__main__":
         "-m", 
         "--model_config", 
         type=str, 
-        default="config/AISHELL3/model.yaml",
+        default="config/LJSpeech/model.yaml",
         # required=True, 
         help="path to model.yaml"
     )
@@ -142,7 +145,7 @@ if __name__ == "__main__":
         "-t", 
         "--train_config", 
         type=str, 
-        default="config/AISHELL3/train.yaml",
+        default="config/LJSpeech/train.yaml",
         # required=True, 
         help="path to train.yaml"
     )

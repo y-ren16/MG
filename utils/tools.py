@@ -75,13 +75,18 @@ def to_device(data, device, non_blocking=True):
 
 
 def log(
-    logger, step=None, losses=None, fig=None, audio=None, sampling_rate=22050, tag=""
+    logger, step=None, losses=None, enc_grad_norm=None, dec_grad_norm=None, fig=None, audio=None, sampling_rate=22050, tag=""
 ):
     if losses is not None:
         logger.add_scalar("Loss/total_loss", losses[0], step)
         logger.add_scalar("Loss/dur_loss", losses[1], step)
         logger.add_scalar("Loss/prior_loss", losses[2], step)
         logger.add_scalar("Loss/diff_loss", losses[3], step)
+        
+    if enc_grad_norm is not None:
+        logger.add_scalar('training/enc_grad_norm', enc_grad_norm, step)
+    if dec_grad_norm is not None:
+        logger.add_scalar('training/dec_grad_norm', dec_grad_norm, step)
 
     if fig is not None:
         logger.add_figure(tag, fig)
@@ -141,6 +146,25 @@ def pad_2D(inputs, maxlen=None):
         output = np.stack([pad(x, maxlen) for x in inputs])
     else:
         max_len = max(np.shape(x)[0] for x in inputs)
+        output = np.stack([pad(x, max_len) for x in inputs])
+
+    return output
+
+def pad_2D_new(inputs, maxlen=None):
+    def pad(x, max_len):
+        PAD = 0
+        if np.shape(x)[1] > max_len:
+            raise ValueError("not max_len")
+        padding_needed = ((0, 0), (0, max_len - np.shape(x)[1]))
+        x_padded = np.pad(
+            x, padding_needed, mode="constant", constant_values=PAD
+        )
+        return x_padded
+
+    if maxlen:
+        output = np.stack([pad(x, maxlen) for x in inputs])
+    else:
+        max_len = max(np.shape(x)[1] for x in inputs)
         output = np.stack([pad(x, max_len) for x in inputs])
 
     return output

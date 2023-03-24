@@ -11,7 +11,7 @@ from scipy.io.wavfile import write
 import datetime as dt
 import numpy as np
 from pypinyin import pinyin, Style
-from text import text_to_sequence
+from text import text_to_sequence, cmudict
 import yaml
 from model.gradtts import GradTTS
 from utils.tools import to_device
@@ -34,11 +34,11 @@ HIFIGAN_CONFIG = '../MG-Data/hifigan_ckpt/EN/config.json'
 HIFIGAN_CHECKPT = '../MG-Data/hifigan_ckpt/EN/generator_LJSpeech.pth.tar'
 
 
-def intersperse(lst, item):
-    # Adds blank symbol
-    result = [item] * (len(lst) * 2 + 1)
-    result[1::2] = lst
-    return result
+# def intersperse(lst, item):
+#     # Adds blank symbol
+#     result = [item] * (len(lst) * 2 + 1)
+#     result[1::2] = lst
+#     return result
 
 
 def read_lexicon(lex_path):
@@ -81,25 +81,42 @@ def preprocess_fr(text):
     return phones[0]
 
 
-def synthesize_one_sample(args, result_path, text, spk, language, cleaners, i=0):
+def synthesize_one_sample(args, result_path, text, spk, configs, i=0):
+    preprocess_config, model_config, train_config = configs
+    language = preprocess_config["preprocessing"]["text"]["language"]
+    cleaners = preprocess_config["preprocessing"]["text"]["text_cleaners"]
+    add_blank = preprocess_config["preprocessing"]["g2p"]["add_blank"]
+    dict_path = preprocess_config["preprocessing"]["g2p"]["dict_path"]
     if language == "ch":
         text = preprocess_mandarin(text)
-        x = np.array([
-            intersperse(text_to_sequence(language, True, text, cleaners), len(symbols_ch))])
+        phones = np.array(
+            text_to_sequence(language, True, text, cleaners))
     elif language == "en":
-        x = np.array([
-            intersperse(text_to_sequence(language, False, text, cleaners), len(symbols_en))])
+        dict = cmudict.CMUDict(dict_path)
+        phones = np.array(
+            text_to_sequence(language, False, text, cleaners, dict))
     else:
         # if language == "fr":
         text = preprocess_fr(text)
-        x = np.array([
-            intersperse(text_to_sequence(language, True, text, cleaners), len(symbols_fr))])
+        phones = np.array(
+            text_to_sequence(language, True, text, cleaners))
+
+    if language == 'en':
+        symbols_length = len(symbols_en)
+    elif language == 'fr':
+        symbols_length = len(symbols_fr)
+    elif language == 'ch':
+        symbols_length = len(symbols_ch)
+
+    if add_blank:
+        result = [symbols_length] * (len(phones) * 2 + 1)
+        result[1::2] = phones
+        phones = np.array([result])
 
     ids = raw_texts = [text[:100]]
-    text_lens = np.array([x.shape[-1]])
+    text_lens = np.array([phones.shape[-1]])
     spk = spk = np.array([random.randint(0,217)])
     speakers = spk
-    phones = x
 
     t = dt.datetime.now()
     batchs = [(ids, raw_texts, speakers, phones, text_lens, max(text_lens))]
@@ -204,7 +221,7 @@ if __name__ == "__main__":
         '--result_dir',
         type=str,
         required=False,
-        default='2',
+        default='0323-DDP',
         help='number of timesteps of reverse diffusion'
     )
 
@@ -238,7 +255,7 @@ if __name__ == "__main__":
 
     generator = GradTTS(preprocess_config, model_config).to(device)
     # generator = get_model(args, configs, device, train=False).to(device)
-    generator = torch.nn.DataParallel(generator)
+    # generator = torch.nn.DataParallel(generator)
     checkpoint = torch.load(
             os.path.join(
                 train_config["path"]["ckpt_path"], preprocess_config["dataset"], args.ckpt, f'{args.restore_epoch}.pt'
@@ -262,6 +279,7 @@ if __name__ == "__main__":
 
     language = preprocess_config["preprocessing"]["text"]["language"]
     cleaners = preprocess_config["preprocessing"]["text"]["text_cleaners"]
+    add_blank = preprocess_config["preprocessing"]["g2p"]["add_blank"]
 
     if language == "fr":
         symbols = symbols_fr
@@ -278,8 +296,8 @@ if __name__ == "__main__":
             texts = [line.strip() for line in f.readlines()]
         with torch.no_grad():
             for i, text in tqdm(enumerate(texts)):
-                synthesize_one_sample(args, result_path, text, spk, language, cleaners, i)
+                synthesize_one_sample(args, result_path, text, spk, configs, i)
 
     if args.mode == "single":
         with torch.no_grad():
-            synthesize_one_sample(args, result_path, text, spk, language, cleaners)
+            synthesize_one_sample(args, result_path, text, spk, configs)

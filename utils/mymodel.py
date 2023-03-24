@@ -12,7 +12,7 @@ def get_model(args, configs, device, train=False):
     model = GradTTS(preprocess_config, model_config).to(device)
 
     if args.restore_epoch:
-        # model = torch.nn.DataParallel(model)
+        model = torch.nn.DataParallel(model)
         ckpt_path = os.path.join(
             train_config["path"]["ckpt_path"], preprocess_config["dataset"], train_config["path"]["time"], 
             "{}.pt".format(args.restore_epoch),
@@ -47,8 +47,10 @@ def get_vocoder(config, device):
     if name == "HiFi-GAN":
         # HIFIGAN_CONFIG = '../MG-Data/hifigan_ckpt/config.json'
         # HIFIGAN_CHECKPT = '../MG-Data/hifigan_ckpt/generator_universal.pth.tar'
-        HIFIGAN_CONFIG = '../MG-Data/hifigan_ckpt/UNIVERSAL_V1/config.json'
-        HIFIGAN_CHECKPT = '../MG-Data/hifigan_ckpt/UNIVERSAL_V1/g_02500000'
+        # HIFIGAN_CONFIG = '../MG-Data/hifigan_ckpt/UNIVERSAL_V1/config.json'
+        # HIFIGAN_CHECKPT = '../MG-Data/hifigan_ckpt/UNIVERSAL_V1/g_02500000'
+        HIFIGAN_CONFIG = '../MG-Data/hifigan_ckpt/EN/config.json'
+        HIFIGAN_CHECKPT = '../MG-Data/hifigan_ckpt/EN/generator_LJSpeech.pth.tar'
         with open(HIFIGAN_CONFIG, "r") as f:
             config = json.load(f)
         config = hifigan.AttrDict(config)
