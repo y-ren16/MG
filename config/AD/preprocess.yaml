@@ -10,7 +10,7 @@ preprocessing:
     language: "fr"
   g2p:
     dict_path: None
-    add_blank: False
+    add_blank: True
   audio:
     sampling_rate: 22050
     max_wav_value: 32768.0
