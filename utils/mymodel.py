@@ -40,19 +40,13 @@ def get_param_num(model):
     return num_param
 
 
-def get_vocoder(config, device):
+def get_vocoder(con, device):
     name = con["vocoder"]["model"]
     speaker = con["vocoder"]["speaker"]
 
     if name == "HiFi-GAN":
         # HIFIGAN_CONFIG = '../MG-Data/hifigan_ckpt/config.json'
         # HIFIGAN_CHECKPT = '../MG-Data/hifigan_ckpt/generator_universal.pth.tar'
-        # HIFIGAN_CONFIG = '../MG-Data/hifigan_ckpt/UNIVERSAL_V1/config.json'
-        # HIFIGAN_CHECKPT = '../MG-Data/hifigan_ckpt/UNIVERSAL_V1/g_02500000'
-        # HIFIGAN_CONFIG = '../MG-Data/hifigan_ckpt/EN/config.json'
-        # HIFIGAN_CHECKPT = '../MG-Data/hifigan_ckpt/EN/generator_LJSpeech.pth.tar'
-        # with open(HIFIGAN_CONFIG, "r") as f:
-        #     config = json.load(f)
         HIFIGAN_CONFIG_UN = '../MG-Data/hifigan_ckpt/UNIVERSAL_V1/config.json'
         HIFIGAN_CHECKPT_UN = '../MG-Data/hifigan_ckpt/UNIVERSAL_V1/g_02500000'
         HIFIGAN_CONFIG_EN = '../MG-Data/hifigan_ckpt/EN/config.json'
