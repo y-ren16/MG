@@ -146,7 +146,6 @@ def synthesize_one_sample(args, result_path, text, spk, configs, i=0):
         preprocess_config,
     )
 
-
     if args.speaker_id:
         write(
             f'{result_path}/sample_pt{str(args.restore_epoch)}_sp{args.speaker_id}_t{args.timesteps}_line{i}.wav',
