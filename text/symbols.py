@@ -1,7 +1,7 @@
 from text import cmudict, pinyin
 
 _pad = '_'
-_punctuation = '!\'(),.:;? '
+_punctuation = '!\'(),.:;?\" '
 _special = '-'
 _letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
 _silences = ["@sp", "@spn", "@sil"]
@@ -25,11 +25,11 @@ fr_IPA = [
 
 fr_arpabet = ['@' + s for s in fr_IPA]
 
-symbols_fr = [_pad] + list(_special) + list(_punctuation) + fr_arpabet
+symbols_fr = [_pad] + list(_special) + list(_punctuation) + fr_arpabet + _silences
 
 _arpabet = ['@' + s for s in cmudict.valid_symbols]
 
-symbols_en = [_pad] + list(_special) + list(_punctuation) + list(_letters) + _arpabet
+symbols_en = [_pad] + list(_special) + list(_punctuation) + list(_letters) + _arpabet + _silences
 
 _pinyin = ["@" + s for s in pinyin.valid_symbols]
 

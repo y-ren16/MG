@@ -10,7 +10,7 @@ preprocessing:
     language: "en"
   g2p:
     dict_path: 'resources/cmu_dictionary'
-    add_blank: True
+    add_blank: False
   audio:
     sampling_rate: 22050
     max_wav_value: 32768.0

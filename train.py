@@ -4,7 +4,7 @@ from tqdm import tqdm
 import json
 import numpy as np
 import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "2, 3, 4, 5, 6, 7"
+os.environ["CUDA_VISIBLE_DEVICES"] = "4, 5"
 import torch
 import torch.nn as nn
 # from torch.utils.data import DataLoader
@@ -144,30 +144,30 @@ def main(rank, args, configs):
 
 
 if __name__ == '__main__':
-    # parser = argparse.ArgumentParser()
-    # parser.add_argument("--restore_step", type=int, default=0)
-    # parser.add_argument("--restore_epoch", type=int, default=0)
-    # parser.add_argument(
-    #     "-p",
-    #     "--preprocess_config",
-    #     type=str,
-    #     required=True,
-    #     help="path to preprocess.yaml",
-    # )
-    # parser.add_argument(
-    #     "-m", "--model_config", type=str, required=True, help="path to model.yaml"
-    # )
-    # parser.add_argument(
-    #     "-t", "--train_config", type=str, required=True, help="path to train.yaml"
-    # )
-    # parser.add_argument('--local_rank', default=-1, type=int,
-    #                     help='node rank for distributed training')
-    # args = parser.parse_args()
-
     parser = argparse.ArgumentParser()
+    parser.add_argument("--restore_step", type=int, default=0)
+    parser.add_argument("--restore_epoch", type=int, default=0)
+    parser.add_argument(
+        "-p",
+        "--preprocess_config",
+        type=str,
+        required=True,
+        help="path to preprocess.yaml",
+    )
+    parser.add_argument(
+        "-m", "--model_config", type=str, required=True, help="path to model.yaml"
+    )
+    parser.add_argument(
+        "-t", "--train_config", type=str, required=True, help="path to train.yaml"
+    )
+    parser.add_argument('--local_rank', default=-1, type=int,
+                        help='node rank for distributed training')
     args = parser.parse_args()
-    with open('./commandline_args.txt', 'r') as f:
-        args.__dict__ = json.load(f)
+
+    # parser = argparse.ArgumentParser()
+    # args = parser.parse_args()
+    # with open('./commandline_args.txt', 'r') as f:
+    #     args.__dict__ = json.load(f)
 
     # print(args.local_rank)
 

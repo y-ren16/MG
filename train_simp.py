@@ -23,7 +23,7 @@ from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.utils.data.distributed import DistributedSampler
 # from evaluate import evaluate
 
-gpus = [1]
+gpus = [7]
 torch.cuda.set_device('cuda:{}'.format(gpus[0]))
 device = torch.device("cuda:{}".format(gpus[0]) if torch.cuda.is_available() else "cpu")
 
@@ -181,28 +181,28 @@ def main(args, configs):
 
 
 if __name__ == '__main__':
-    # parser = argparse.ArgumentParser()
-    # parser.add_argument("--restore_step", type=int, default=0)
-    # parser.add_argument("--restore_epoch", type=int, default=0)
-    # parser.add_argument(
-    #     "-p",
-    #     "--preprocess_config",
-    #     type=str,
-    #     required=True,
-    #     help="path to preprocess.yaml",
-    # )
-    # parser.add_argument(
-    #     "-m", "--model_config", type=str, required=True, help="path to model.yaml"
-    # )
-    # parser.add_argument(
-    #     "-t", "--train_config", type=str, required=True, help="path to train.yaml"
-    # )
-    # args = parser.parse_args()
-
     parser = argparse.ArgumentParser()
+    parser.add_argument("--restore_step", type=int, default=0)
+    parser.add_argument("--restore_epoch", type=int, default=0)
+    parser.add_argument(
+        "-p",
+        "--preprocess_config",
+        type=str,
+        required=True,
+        help="path to preprocess.yaml",
+    )
+    parser.add_argument(
+        "-m", "--model_config", type=str, required=True, help="path to model.yaml"
+    )
+    parser.add_argument(
+        "-t", "--train_config", type=str, required=True, help="path to train.yaml"
+    )
     args = parser.parse_args()
-    with open('./commandline_args.txt', 'r') as f:
-        args.__dict__ = json.load(f)
+
+    # parser = argparse.ArgumentParser()
+    # args = parser.parse_args()
+    # with open('./commandline_args.txt', 'r') as f:
+    #     args.__dict__ = json.load(f)
 
     preprocess_config = yaml.load(
         open(args.preprocess_config, "r"), Loader=yaml.FullLoader
