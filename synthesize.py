@@ -21,6 +21,8 @@ from phonemizer.backend import EspeakBackend
 backend = EspeakBackend(language='fr-fr')
 from phonemizer.backend import EspeakMbrolaBackend
 backend2 = EspeakMbrolaBackend(language='mb-fr2')
+from utils.mymodel import vocoder_infer
+from utils.mymodel import get_model, get_param_num, get_vocoder
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -30,8 +32,8 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 # HIFIGAN_CHECKPT = './hifigan/generator_universal.pth.tar.zip'
 # HIFIGAN_CONFIG = './LJ_FT_T2_V3/config.json'
 # HIFIGAN_CHECKPT = './LJ_FT_T2_V3/generator_v3'
-HIFIGAN_CONFIG = '../MG-Data/hifigan_ckpt/EN/config.json'
-HIFIGAN_CHECKPT = '../MG-Data/hifigan_ckpt/EN/generator_LJSpeech.pth.tar'
+# HIFIGAN_CONFIG = '../MG-Data/hifigan_ckpt/EN/config.json'
+# HIFIGAN_CHECKPT = '../MG-Data/hifigan_ckpt/EN/generator_LJSpeech.pth.tar'
 
 
 # def intersperse(lst, item):
@@ -136,7 +138,14 @@ def synthesize_one_sample(args, result_path, text, spk, configs, i=0):
     t = (dt.datetime.now() - t).total_seconds()
     sample_rate = 22050
     # print(f'Grad-TTS RTF: {t * sample_rate / (outputs[8].shape[-1] * 256)}')
-    audio = (vocoder.forward(outputs[8]).cpu().squeeze().clamp(-1, 1).numpy() * 32768).astype(np.int16)
+    # audio = (vocoder.forward(outputs[8]).cpu().squeeze().clamp(-1, 1).numpy() * 32768).astype(np.int16)
+    audio = vocoder_infer(
+        outputs[8],
+        vocoder,
+        model_config,
+        preprocess_config,
+    )
+
 
     if args.speaker_id:
         write(
@@ -158,7 +167,7 @@ if __name__ == "__main__":
         '-r',
         '--restore_epoch',
         type=int,
-        # required=True,
+        required=True,
         default=100,
         help='restore_epoch of Grad-TTS'
     )
@@ -166,7 +175,7 @@ if __name__ == "__main__":
         '-c',
         '--ckpt',
         type=str,
-        # required=True,
+        required=True,
         default="2023-03-11-02_53",
         help='path to a checkpoint of Grad-TTS'
     )
@@ -174,7 +183,7 @@ if __name__ == "__main__":
         '-d',
         "--dataset",
         type=str,
-        # required=True,
+        required=True,
         default="LJSpeech",
         help="dataset yaml",
     )
@@ -220,7 +229,7 @@ if __name__ == "__main__":
         '-dir',
         '--result_dir',
         type=str,
-        required=False,
+        required=True,
         default='0323-DDP',
         help='number of timesteps of reverse diffusion'
     )
@@ -264,18 +273,19 @@ if __name__ == "__main__":
     generator.load_state_dict(checkpoint)
     _ = generator.eval()
 
-    print('Initializing HiFi-GAN...')
+    # print('Initializing HiFi-GAN...')
 
-    with open(HIFIGAN_CONFIG, "r") as f:
-        h = hifigan.AttrDict(json.load(f))
+    # with open(HIFIGAN_CONFIG, "r") as f:
+    #     h = hifigan.AttrDict(json.load(f))
 
-    vocoder = hifigan.Generator(h)
-    device = torch.device('cuda')
-    ckpt = torch.load(HIFIGAN_CHECKPT, map_location=device)
-    vocoder.load_state_dict(ckpt["generator"])
-    _ = vocoder.cuda().eval()
-    vocoder.remove_weight_norm()
-    vocoder.to(device)
+    # vocoder = hifigan.Generator(h)
+    # device = torch.device('cuda')
+    # ckpt = torch.load(HIFIGAN_CHECKPT, map_location=device)
+    # vocoder.load_state_dict(ckpt["generator"])
+    # _ = vocoder.cuda().eval()
+    # vocoder.remove_weight_norm()
+    # vocoder.to(device)
+    vocoder = get_vocoder(model_config, device)
 
     language = preprocess_config["preprocessing"]["text"]["language"]
     cleaners = preprocess_config["preprocessing"]["text"]["text_cleaners"]

@@ -23,7 +23,7 @@ from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.utils.data.distributed import DistributedSampler
 # from evaluate import evaluate
 
-gpus = [6]
+gpus = [7]
 torch.cuda.set_device('cuda:{}'.format(gpus[0]))
 device = torch.device("cuda:{}".format(gpus[0]) if torch.cuda.is_available() else "cpu")
 
