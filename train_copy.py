@@ -4,7 +4,7 @@ from tqdm import tqdm
 import json
 import numpy as np
 import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,6"
+os.environ["CUDA_VISIBLE_DEVICES"] = "1,2,4,5"
 import torch
 import torch.nn as nn
 # from torch.utils.data import DataLoader

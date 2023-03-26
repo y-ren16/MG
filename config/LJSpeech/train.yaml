@@ -4,7 +4,7 @@ path:
   result_path: "../MG-Data/output/result"
   time: "2023-03-23-21_12"
 random_seed: 37
-num_gpus: 8
+num_gpus: 4
 optimizer:
   batch_size: 16
   group_size: 4
