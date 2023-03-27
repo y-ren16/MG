@@ -149,6 +149,13 @@ if __name__ == "__main__":
         # required=True, 
         help="path to train.yaml"
     )
+    parser.add_argument( 
+        "--time_dir", 
+        type=str, 
+        default="2023-03-25-23_50",
+        required=True, 
+        help="path to ckpt"
+    )
     args = parser.parse_args()
     # with open('./eva_args.txt', 'r') as f:
     #     args.__dict__ = json.load(f)
@@ -162,15 +169,16 @@ if __name__ == "__main__":
 
     if args.restore_epoch is None:
         ii = []
-        for pt_list in os.listdir(os.path.join(train_config["path"]["ckpt_path"],preprocess_config["dataset"],train_config["path"]["time"])):
+        for pt_list in os.listdir(os.path.join(train_config["path"]["ckpt_path"],preprocess_config["dataset"],args.time_dir)):
             ii.append(int(pt_list.split('.')[0]))
         args.restore_epoch=max(ii)
 
     # Get model
-    model = get_model(args, configs, device, train=False)
+    model = get_model(args, configs, device, args.time_dir, train=False)
     vocoder = get_vocoder(model_config, device)
-    os.makedirs('./Temp/logs',exist_ok = True)
-    logger = SummaryWriter('./Temp/logs')
-    save_path = './Temp'
+    save_path = os.path.join('../Temp_Audio', preprocess_config["dataset"], str(args.restore_epoch))
+    log_path = os.path.join(save_path, 'logs')
+    os.makedirs(log_path,exist_ok = True)
+    logger = SummaryWriter(log_path)
     message = evaluate(save_path, model, args.restore_epoch, configs, logger, vocoder)
     print(message)

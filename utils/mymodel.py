@@ -6,7 +6,7 @@ from model.gradtts import GradTTS
 import numpy as np
 
 
-def get_model(args, configs, device, train=False):
+def get_model(args, configs, device, time_dir, train=False):
     (preprocess_config, model_config, train_config) = configs
 
     model = GradTTS(preprocess_config, model_config).to(device)
@@ -14,7 +14,7 @@ def get_model(args, configs, device, train=False):
     if args.restore_epoch:
         # model = torch.nn.DataParallel(model)
         ckpt_path = os.path.join(
-            train_config["path"]["ckpt_path"], preprocess_config["dataset"], train_config["path"]["time"], 
+            train_config["path"]["ckpt_path"], preprocess_config["dataset"], time_dir, 
             "{}.pt".format(args.restore_epoch),
         )
         ckpt = torch.load(ckpt_path, map_location=lambda loc, storage: loc)
