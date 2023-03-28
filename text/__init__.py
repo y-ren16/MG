@@ -56,9 +56,9 @@ def text_to_sequence(language, have_phone, text, cleaner_names, dictionary=None)
         sequence += end
     if language == 'en':
         space = _symbols_to_sequence_en(' ')
-        start = _symbols_to_sequence_en(['@sp'])
-        end = _symbols_to_sequence_en(['@spn'])
-        sequence += start
+        # start = _symbols_to_sequence_en(['@sp'])
+        # end = _symbols_to_sequence_en(['@spn'])
+        # sequence += start
         while len(text):
             m = _curly_re.match(text)
             if not m:
@@ -80,7 +80,7 @@ def text_to_sequence(language, have_phone, text, cleaner_names, dictionary=None)
             text = m.group(3)
         if dictionary is not None:
             sequence = sequence[:-1] if sequence[-1] == space[0] else sequence
-        sequence += end
+        # sequence += end
     if language == 'ch':
         while len(text):
             m = _curly_re.match(text)

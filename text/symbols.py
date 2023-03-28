@@ -4,7 +4,7 @@ _pad = '_'
 _punctuation = '!\'(),.:;?\" '
 _special = '-'
 _letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
-_silences = ["@sp", "@spn", "@sil"]
+_silences = ["@sp", "@spn"]
 
 # _arpabet = ['@' + s for s in cmudict.valid_symbols]
 # symbols = [_pad] + list(_special) + list(_punctuation) + list(_letters) + _arpabet
@@ -29,7 +29,7 @@ symbols_fr = [_pad] + list(_special) + list(_punctuation) + fr_arpabet + _silenc
 
 _arpabet = ['@' + s for s in cmudict.valid_symbols]
 
-symbols_en = [_pad] + list(_special) + list(_punctuation) + list(_letters) + _arpabet + _silences
+symbols_en = [_pad] + list(_special) + list(_punctuation) + list(_letters) + _arpabet
 
 _pinyin = ["@" + s for s in pinyin.valid_symbols]
 

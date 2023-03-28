@@ -20,11 +20,11 @@ class TextEncoder(nn.Module):
         self.n_feats = preprocess_config["preprocessing"]["mel"]["n_mel_channels"]
         self.language = preprocess_config["preprocessing"]["text"]["language"]
         if self.language == 'fr':
-            self.n_vocab = len(symbols_fr) + 1
+            self.n_vocab = len(symbols_fr) + 1 if preprocess_config["preprocessing"]["g2p"]["add_blank"] else len(symbols_fr)
         elif self.language == 'en':
-            self.n_vocab = len(symbols_en) + 1
+            self.n_vocab = len(symbols_en) + 1 if preprocess_config["preprocessing"]["g2p"]["add_blank"] else len(symbols_en)
         elif self.language == 'ch':
-            self.n_vocab = len(symbols_ch) + 1
+            self.n_vocab = len(symbols_ch) + 1 if preprocess_config["preprocessing"]["g2p"]["add_blank"] else len(symbols_ch)
 
         self.emb = torch.nn.Embedding(self.n_vocab, self.n_channels)
         torch.nn.init.normal_(self.emb.weight, 0.0, self.n_channels ** -0.5)

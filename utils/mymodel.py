@@ -6,7 +6,7 @@ from model.gradtts import GradTTS
 import numpy as np
 
 
-def get_model(args, configs, device, time_dir, train=False):
+def get_model(args, configs, device, time_dir=None, train=False):
     (preprocess_config, model_config, train_config) = configs
 
     model = GradTTS(preprocess_config, model_config).to(device)
