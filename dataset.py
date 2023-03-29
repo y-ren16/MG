@@ -127,9 +127,13 @@ class TextMelDataset(Dataset):
         # audio, sr = torchaudio.load(
         #     os.path.join(self.wav_path,self.dataset_name, basename)
         # )
-        audio, sr = torchaudio.load(
-            os.path.join(self.wav_path, basename)
-        )
+        if self.language == 'ch':
+            audio, sr = torchaudio.load(os.path.join(self.wav_path, basename[:-8], basename))
+        else:
+            audio, sr = torchaudio.load(os.path.join(self.wav_path, basename))
+        # audio, sr = torchaudio.load(
+        #     os.path.join(self.wav_path, basename)
+        # )
         assert sr == self.sample_rate
         mel = mel_spectrogram(audio, self.n_fft, self.n_mels, self.sample_rate, self.hop_length,
                               self.win_length, self.f_min, self.f_max, center=False).squeeze()

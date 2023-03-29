@@ -117,7 +117,7 @@ def synthesize_one_sample(args, result_path, text, spk, configs, i=0):
 
     ids = raw_texts = [text[:100]]
     text_lens = np.array([phones.shape[-1]])
-    spk = spk = np.array([random.randint(0,217)])
+    # spk = spk = np.array([random.randint(0,217)])
     speakers = spk
 
     t = dt.datetime.now()
