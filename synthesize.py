@@ -114,6 +114,8 @@ def synthesize_one_sample(args, result_path, text, spk, configs, i=0):
         result = [symbols_length] * (len(phones) * 2 + 1)
         result[1::2] = phones
         phones = np.array([result])
+    else:
+        phones = np.array([phones])
 
     ids = raw_texts = [text[:100]]
     text_lens = np.array([phones.shape[-1]])
