@@ -51,8 +51,13 @@ def get_vocoder(con, device):
         HIFIGAN_CHECKPT_UN = '../MG-Data/hifigan_ckpt/UNIVERSAL_V1/g_02500000'
         HIFIGAN_CONFIG_EN = '../MG-Data/hifigan_ckpt/EN/config.json'
         HIFIGAN_CHECKPT_EN = '../MG-Data/hifigan_ckpt/EN/generator_LJSpeech.pth.tar'
+        HIFIGAN_CONFIG_FR = '../hifi-gan-master/config_v1.json'
+        HIFIGAN_CHECKPT_FR ='../hifi-gan-master/cp_hifigan/UNIVERSAL_V1/g_02515000'
         if speaker == "LJSpeech":
             with open(HIFIGAN_CONFIG_EN, "r") as f:
+                config = json.load(f)
+        elif speaker == "FR":
+            with open(HIFIGAN_CONFIG_FR, "r") as f:
                 config = json.load(f)
         elif speaker == "universal":
             with open(HIFIGAN_CONFIG_UN, "r") as f:
@@ -61,6 +66,8 @@ def get_vocoder(con, device):
         vocoder = hifigan.Generator(config)
         if speaker == "LJSpeech":
             ckpt = torch.load(HIFIGAN_CHECKPT_EN)
+        elif speaker == "FR":
+            ckpt = torch.load(HIFIGAN_CHECKPT_FR)
         elif speaker == "universal":
             ckpt = torch.load(HIFIGAN_CHECKPT_UN)
         vocoder.load_state_dict(ckpt["generator"])

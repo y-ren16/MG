@@ -16,7 +16,7 @@ decoder:
 
 vocoder:
   model: "HiFi-GAN" # support 'HiFi-GAN', 'MelGAN'
-  speaker: "universal" # support  'LJSpeech', 'universal'
+  speaker: "FR" # support  'LJSpeech', 'universal'
 
 multi_speaker: False
 

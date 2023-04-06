@@ -200,6 +200,7 @@ if __name__ == "__main__":
         '-s',
         "--source",
         type=str,
+        required=True,
         default="syn_en.txt",
         help="path to a source file with format like train.txt and val.txt, for batch mode only",
     )
@@ -302,7 +303,12 @@ if __name__ == "__main__":
     os.makedirs(result_path, exist_ok=True)
     # Preprocess texts
     if args.mode == "batch":
-        with open("../frg2p/2023-FH1_submission_directory/NEB_test/NEB_test.txt", 'r', encoding='utf-8') as f:
+        with open(args.source, "r", encoding="utf-8") as f:
+        # with open("../frg2p/2023-FH1_submission_directory/NEB_test/NEB_test.txt", 'r', encoding='utf-8') as f:
+        # with open("../frg2p/2023-FH1_submission_directory/NEB_test_homos/NEB_test_homos.txt", 'r', encoding='utf-8') as f:
+        # with open("../frg2p/2023-FH1_submission_directory/NEB_test_list/NEB_test_list.txt", 'r', encoding='utf-8') as f:
+        # with open("../frg2p/2023-FH1_submission_directory/NEB_test_sus/NEB_test_sus.txt", 'r', encoding='utf-8') as f:
+        # with open("../frg2p/2023-FH1_submission_directory/NEB_test_par/NEB_test_par.txt", 'r', encoding='utf-8') as f:
             name = []
             texts = []
             phone = []
