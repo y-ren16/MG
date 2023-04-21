@@ -82,6 +82,9 @@ def text_to_sequence(language, have_phone, text, cleaner_names, dictionary=None)
             sequence = sequence[:-1] if sequence[-1] == space[0] else sequence
         # sequence += end
     if language == 'ch':
+        start = _symbols_to_sequence_ch(['@sp'])
+        end = _symbols_to_sequence_ch(['@spn'])
+        sequence += start
         while len(text):
             m = _curly_re.match(text)
             if not m:
@@ -90,6 +93,7 @@ def text_to_sequence(language, have_phone, text, cleaner_names, dictionary=None)
             sequence += _symbols_to_sequence_ch(_clean_text(m.group(1), cleaner_names))
             sequence += _arpabet_to_sequence_ch(m.group(2))
             text = m.group(3)
+        sequence += end
     return sequence
 
 
